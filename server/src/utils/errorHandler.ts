@@ -1,4 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
+import { Logger } from './logger';
+import { isDatabaseConnected } from '../config/database';
+import { dhanService } from '../services/dhanService';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -16,15 +19,15 @@ export const errorHandler = (
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
-  console.error(`[Error Handler] [${req.method} ${req.url}] ${statusCode} - ${message}`);
+  Logger.error('ErrorHandler', `[${req.method} ${req.url}] HTTP ${statusCode} - ${message}`);
 
   res.status(statusCode).json({
     success: false,
     status: 'error',
-    error: {
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    },
+    message,
+    configured: dhanService.isConfigured(),
+    dbConnected: isDatabaseConnected(),
+    data: null,
     timestamp: new Date().toISOString()
   });
 };

@@ -7,7 +7,7 @@ import { OITable } from './components/OITable';
 import { OIChangeTable } from './components/OIChangeTable';
 import { Legend } from './components/Legend';
 import { mockDatasets } from './mock/mockData';
-import type { FilterState } from './types/dashboard';
+import type { FilterState, IndexDataset } from './types/dashboard';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -21,7 +21,9 @@ export function App() {
     quickFilter: '30min',
   });
 
-  const currentDataset = mockDatasets[filters.selectedIndex] || mockDatasets['NIFTY'];
+  const [dataset, setDataset] = useState<IndexDataset>(
+    () => mockDatasets[filters.selectedIndex] || mockDatasets['NIFTY']
+  );
 
   useEffect(() => {
     if (isDarkMode) {
@@ -30,6 +32,40 @@ export function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchBackendData = async () => {
+      try {
+        const query = new URLSearchParams({
+          index: filters.selectedIndex,
+          date: filters.selectedDate,
+          startTime: filters.startTime,
+          endTime: filters.endTime,
+        });
+        const res = await fetch(`http://localhost:5000/api/option-chain/time-series?${query.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && json.data.rows && json.data.rows.length > 0 && isMounted) {
+            setDataset(json.data);
+            return;
+          }
+        }
+      } catch (err) {
+        // Fallback to local dataset on server offline
+      }
+      if (isMounted) {
+        setDataset(mockDatasets[filters.selectedIndex] || mockDatasets['NIFTY']);
+      }
+    };
+
+    fetchBackendData();
+    return () => {
+      isMounted = false;
+    };
+  }, [filters.selectedIndex, filters.selectedDate, filters.startTime, filters.endTime]);
+
+  const currentDataset = dataset;
 
   const handleToggleDarkMode = () => {
     setIsDarkMode((prev) => !prev);
