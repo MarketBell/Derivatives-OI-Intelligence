@@ -1,26 +1,57 @@
-# Database Schema - Initial Planning
+# Database Architecture & Schema Status
 
-> **IMPORTANT**: This document is for **INITIAL PLANNING ONLY**. Actual PostgreSQL database tables and migrations should NOT be created at this stage until the exact response payload structure of the Dhan Option Chain API has been fully mapped and verified.
+## Overview
 
-## Preliminary Database Fields
+The **OI Intelligence Dashboard** backend uses **MongoDB** (via Mongoose) to store periodic option-chain snapshots collected during market hours.
 
-The database schema will store periodic option chain snapshots to compute OI build-up and changes. The following preliminary fields have been identified:
-
-| Field Name | Description | Example / Type |
-| :--- | :--- | :--- |
-| `Index` | Target index symbol | `NIFTY`, `BANKNIFTY`, `SENSEX` |
-| `Timestamp` | Snapshot time of data collection (5-min interval) | `2026-08-17T09:15:00Z` |
-| `Expiry` | Expiry date of the option contract | `2026-08-20` |
-| `Strike Price` | Option strike price | `24500` |
-| `CE OI` | Call Option Open Interest | Integer |
-| `PE OI` | Put Option Open Interest | Integer |
-| `CE OI Change` | Calculated or API-provided Call Option OI Change | Integer / Derived |
-| `PE OI Change` | Calculated or API-provided Put Option OI Change | Integer / Derived |
+> [!IMPORTANT]
+> **Current Status**: **Schema Prepared (Connection & Persistence Pending)**.  
+> MongoDB connection setup (`server/src/config/database.ts`) and snapshot schema (`server/src/models/OptionChainSnapshot.ts`) exist in the codebase, but active database connection and live background snapshot persistence are **NOT** completed yet.
 
 ---
 
-## Next Steps
+## Snapshot Data Model Schema
 
-1. Inspect & document Dhan Option Chain API response payload structure.
-2. Determine exact data types, index keys, and normalization rules.
-3. Design and implement final PostgreSQL schema/migrations.
+Snapshots are structured in MongoDB under the `option_chain_snapshots` collection:
+
+```typescript
+export interface IOptionChainSnapshot {
+  index: 'NIFTY' | 'BANK NIFTY' | 'SENSEX';
+  timestamp: Date;
+  dateStr: string;      // "YYYY-MM-DD"
+  timeStr: string;      // "HH:MM AM/PM"
+  expiry: string;       // "YYYY-MM-DD"
+  underlyingValue?: number;
+  totalCallOI: number;
+  totalPutOI: number;
+  strikes: Array<{
+    strikePrice: number;
+    ceOI: number;
+    peOI: number;
+    cePreviousOI?: number;
+    pePreviousOI?: number;
+    ceOIChange?: number;
+    peOIChange?: number;
+    ceLTP?: number;
+    peLTP?: number;
+    ceVolume?: number;
+    peVolume?: number;
+  }>;
+}
+```
+
+---
+
+## MongoDB Indexes
+
+The collection is indexed for high-performance time-series queries:
+- Compound Index: `{ index: 1, dateStr: 1, timeStr: 1 }`
+- Compound Index: `{ index: 1, timestamp: -1 }`
+
+---
+
+## Pending Database Tasks
+
+1. **MongoDB Connection**: Configure `MONGODB_URI` environment variable and enable active DB connection.
+2. **Snapshot Ingestion**: Wire automated 5-minute collector to save normalized snapshots into MongoDB.
+3. **Data Retrieval API**: Connect MongoDB snapshot queries directly into `oiCalculationService.ts` for live frontend API endpoints.

@@ -1,35 +1,56 @@
-# OI Intelligence Dashboard - Functional Requirements
+# OI Intelligence Dashboard - Functional Requirements & Implementation Status
 
-## Core Requirements
+## Overview & Core Requirements
 
 1. **Purpose**:
-   - Dashboard for option-chain based analysis.
+   - Comprehensive dashboard for real-time and historical option-chain Open Interest (OI) build-up and unwinding analysis.
 
 2. **Supported Indices**:
    - **NIFTY**
    - **BANK NIFTY**
    - **SENSEX**
 
-3. **Data Collection & Schedule**:
-   - **Data Source**: Dhan Option Chain API
+3. **Data Collection & Scheduling** *(Pending Integration)*:
+   - **Data Source**: Dhan Option Chain API (POST `/v2/optionchain`)
    - **Data Collection Window**: 9:15 AM to 3:40 PM (Trading Hours)
-   - **Data Frequency**: Every 5 minutes
+   - **Data Frequency**: Every 5 minutes (Automated scheduler pending)
 
 4. **Metrics & Indicators**:
    - **CE OI** (Call Option Open Interest)
    - **PE OI** (Put Option Open Interest)
-   - **OI Change Calculations** (tracking interest build-up or unwinding over time intervals)
+   - **Full-Day OI Change** (Current/Closing OI - Previous Day Closing OI)
+   - **Last 1-Hour OI Change** (Current OI - OI from 1 hour earlier)
+   - **Last 15-Minute OI Change** (Current OI - OI from 15 minutes earlier)
+   - **User-Selected Time Duration Difference** (OI at End Time - OI at Start Time)
+   - **Percentage Change** (`((Current OI - Comparison OI) / Comparison OI) × 100`, handling comparison OI = 0 safely)
 
-5. **Dashboard Features & Capabilities**:
-   - **Selected Time-Duration Comparison**: Ability to evaluate OI changes over custom selected timeframes.
-   - **Index Filtering**: Ability to filter analytics by specific index (NIFTY, BANK NIFTY, SENSEX).
-   - **Visual Indicators**: Increase/decrease colour coding for quick visual identification of bullish/bearish positioning.
+5. **Dashboard Features**:
+   - Index selection (NIFTY, BANK NIFTY, SENSEX) - *Implemented in UI*
+   - Date and Time-duration filters (Last 30 mins, Last 1 hour, custom start/end) - *Implemented in UI*
+   - Summary cards (Total Call OI, Total Put OI, Net Difference) - *Implemented in UI*
+   - OI & OI Change tables with color-coded positive/negative indicators - *Implemented in UI*
+   - Dark theme dashboard layout - *Implemented in UI*
+
+---
+
+## Implementation Status of Requirements
+
+| Requirement | Implementation Status | Verification |
+| :--- | :--- | :--- |
+| **Frontend UI Layout & Components** | **Completed** (Uses Mock Data) | Visually verified |
+| **Option Chain Types & Schemas** | **Completed** (`server/src/types/optionChain.ts`) | TypeScript build passed |
+| **OI Calculation Engine** | **Completed** (`server/src/services/oiCalculationService.ts`) | 21 unit tests passed |
+| **Backend Foundation & Express API** | **Completed** (`GET /health`, basic option-chain routes) | 10 endpoint & unit tests passed |
+| **Dhan API Integration** | **Structure Prepared** (`dhanService.ts`) | Pending live API credentials & payload mapping |
+| **MongoDB Persistence** | **Model Defined** (`OptionChainSnapshot.ts`) | Pending active MongoDB connection & storage logic |
+| **Automated 5-min Scheduler** | **Pending** | Not started |
+| **Frontend Real Data Wiring** | **Pending** | Currently uses mock data |
 
 ---
 
 ## Domain Definitions
 
 - **OI (Open Interest)**: The total number of outstanding derivative contracts (option contracts) that have not been settled or closed out for an underlying asset.
-- **OI Change**: The net difference in open interest between two timestamps (e.g., across 5-minute intervals), representing fresh position build-up or unwinding of existing positions.
-- **CE (Call Option)**: A financial contract giving the buyer the right, but not the obligation, to buy an underlying asset at a specified strike price within a specified time frame.
-- **PE (Put Option)**: A financial contract giving the buyer the right, but not the obligation, to sell an underlying asset at a specified strike price within a specified time frame.
+- **OI Change**: The net difference in open interest between two timestamps, representing fresh position build-up or unwinding of existing positions.
+- **CE (Call Option)**: Option contract giving the buyer the right to buy the underlying asset.
+- **PE (Put Option)**: Option contract giving the buyer the right to sell the underlying asset.

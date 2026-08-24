@@ -6,6 +6,8 @@ export interface StrikeData {
   peOI: number;
   cePreviousOI?: number;
   pePreviousOI?: number;
+  ceOIChange?: number;
+  peOIChange?: number;
   ceSecurityId?: number;
   peSecurityId?: number;
   ceLTP?: number;
@@ -13,6 +15,21 @@ export interface StrikeData {
   ceVolume?: number;
   peVolume?: number;
 }
+
+export interface OIChangeResult {
+  ceOIChange: number;
+  peOIChange: number;
+  ceOIChangePct: number;
+  peOIChangePct: number;
+}
+
+export interface OISnapshotData {
+  timestamp: string | Date;
+  totalCallOI: number;
+  totalPutOI: number;
+  strikes?: StrikeData[];
+}
+
 
 export interface NormalizedOptionChain {
   index: SupportedIndex;
