@@ -32,8 +32,8 @@ Dhan Option Chain API (Pending) ──► Normalization & Validation (Implemente
 
 ```text
 OI-INTELLIGENCE-DASHBOARD/
-├── client/          # React + TypeScript + Vite + Tailwind CSS frontend dashboard
-├── server/          # Node.js + Express + TypeScript backend server
+├── frontend/        # React + TypeScript + Vite + Tailwind CSS frontend dashboard
+├── backend/         # Node.js + Express + TypeScript backend server
 │   ├── src/
 │   │   ├── config/       # Server configuration (DB, Dhan API)
 │   │   ├── controllers/  # Option chain & health controllers
@@ -47,14 +47,23 @@ OI-INTELLIGENCE-DASHBOARD/
 │   └── __tests__/        # Jest unit test suites
 ├── database/        # Database schemas & documentation
 ├── docs/            # Project documentation, requirements, API & database specs
+├── package.json     # Root project configuration & scripts
 └── README.md        # Project overview & status
 ```
 
+## Quick Start Commands
+
+- **Run Both (Frontend + Backend concurrently)**: `npm run dev`
+- **Run Frontend only**: `npm run dev:frontend`
+- **Run Backend only**: `npm run dev:backend`
+- **Run Backend Unit Tests**: `npm test`
+- **Build Full Project**: `npm run build`
+
 ## Current Development Status Summary
 
-- **Frontend UI**: Completed React/TypeScript dashboard UI (Dark theme, Index filter, Date/Time range filters, OI Summary Cards, OI & OI Change tables, positive/negative indicators). Currently powered by mock data.
-- **Backend Foundation**: Node.js + Express + TypeScript structure fully operational (`GET /health`, `GET /api/option-chain`, centralized error handling). `npm run build` compiles cleanly with 0 errors.
-- **OI Calculation Engine**: Fully implemented in `server/src/services/oiCalculationService.ts` and independently verified with unit tests (Full-day, 1-hour, 15-minute, custom duration, percentage change, and zero/edge-case handling).
+- **Frontend UI**: Completed React/TypeScript dashboard UI (Dark theme, Index filter, Date/Time range filters, OI Summary Cards, OI & OI Change tables, positive/negative indicators). Currently powered by mock data. Located in `frontend/`.
+- **Backend Foundation**: Node.js + Express + TypeScript structure fully operational (`GET /health`, `GET /api/option-chain`, centralized error handling). Located in `backend/`. `npm run build:backend` compiles cleanly with 0 errors.
+- **OI Calculation Engine**: Fully implemented in `backend/src/services/oiCalculationService.ts` and independently verified with unit tests (Full-day, 1-hour, 15-minute, custom duration, percentage change, and zero/edge-case handling).
 - **Testing**: 31 out of 31 backend unit tests passing cleanly (`npm test`).
 - **Pending Implementations**: Real Dhan API live connection/authentication, MongoDB database connection & snapshot persistence, 5-minute automated scheduler, and connecting live backend data to the frontend UI.
 

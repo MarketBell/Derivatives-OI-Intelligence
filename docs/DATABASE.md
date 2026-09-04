@@ -6,7 +6,7 @@ The **OI Intelligence Dashboard** backend uses **MongoDB** (via Mongoose) to sto
 
 > [!IMPORTANT]
 > **Current Status**: **Schema Prepared (Connection & Persistence Pending)**.  
-> MongoDB connection setup (`server/src/config/database.ts`) and snapshot schema (`server/src/models/OptionChainSnapshot.ts`) exist in the codebase, but active database connection and live background snapshot persistence are **NOT** completed yet.
+> MongoDB connection setup (`backend/src/config/database.ts`) and snapshot schema (`backend/src/models/OptionChainSnapshot.ts`) exist in the codebase, but active database connection and live background snapshot persistence are **NOT** completed yet.
 
 ---
 

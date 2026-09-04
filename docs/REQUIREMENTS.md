@@ -38,8 +38,8 @@
 | Requirement | Implementation Status | Verification |
 | :--- | :--- | :--- |
 | **Frontend UI Layout & Components** | **Completed** (Uses Mock Data) | Visually verified |
-| **Option Chain Types & Schemas** | **Completed** (`server/src/types/optionChain.ts`) | TypeScript build passed |
-| **OI Calculation Engine** | **Completed** (`server/src/services/oiCalculationService.ts`) | 21 unit tests passed |
+| **Option Chain Types & Schemas** | **Completed** (`backend/src/types/optionChain.ts`) | TypeScript build passed |
+| **OI Calculation Engine** | **Completed** (`backend/src/services/oiCalculationService.ts`) | 21 unit tests passed |
 | **Backend Foundation & Express API** | **Completed** (`GET /health`, basic option-chain routes) | 10 endpoint & unit tests passed |
 | **Dhan API Integration** | **Structure Prepared** (`dhanService.ts`) | Pending live API credentials & payload mapping |
 | **MongoDB Persistence** | **Model Defined** (`OptionChainSnapshot.ts`) | Pending active MongoDB connection & storage logic |

@@ -27,15 +27,15 @@
 - **Status**: **Completed & Verified**
 - **Tech Stack**: Node.js, Express, TypeScript, Zod
 - **Architecture**: Clean 3-tier architecture with modular directory structure:
-  - `server/src/config/`: Configuration for database & Dhan API
-  - `server/src/controllers/`: Express request handlers
-  - `server/src/middleware/`: Auth & error handling middleware
-  - `server/src/models/`: Mongoose data schemas (Snapshot models)
-  - `server/src/routes/`: Endpoint routing definitions
-  - `server/src/services/`: Pure business logic, normalization, & API services
-  - `server/src/types/`: Centralized TypeScript interfaces
-  - `server/src/validation/`: Runtime Zod validation schemas
-  - `server/src/utils/`: Custom logger & helpers
+  - `backend/src/config/`: Configuration for database & Dhan API
+  - `backend/src/controllers/`: Express request handlers
+  - `backend/src/middleware/`: Auth & error handling middleware
+  - `backend/src/models/`: Mongoose data schemas (Snapshot models)
+  - `backend/src/routes/`: Endpoint routing definitions
+  - `backend/src/services/`: Pure business logic, normalization, & API services
+  - `backend/src/types/`: Centralized TypeScript interfaces
+  - `backend/src/validation/`: Runtime Zod validation schemas
+  - `backend/src/utils/`: Custom logger & helpers
 - **Verified Endpoints**:
   - `GET /health`: Health check & configuration status
   - `GET /api/option-chain`: Latest stored snapshot metadata
@@ -53,7 +53,7 @@
 
 ### 4. Option Chain Data Types
 - **Status**: **Completed**
-- **File**: `server/src/types/optionChain.ts`
+- **File**: `backend/src/types/optionChain.ts`
 - **Defined Fields**:
   - `index`: Index symbol (`NIFTY`, `BANK NIFTY`, `SENSEX`)
   - `timestamp`: Capture timestamp (ISO / HH:MM format)
@@ -68,7 +68,7 @@
 
 ### 5. OI Calculation Engine
 - **Status**: **Completed & Tested**
-- **File**: `server/src/services/oiCalculationService.ts`
+- **File**: `backend/src/services/oiCalculationService.ts`
 - **Capabilities Implemented**:
   - **Full-Day OI Change**: `Current/Closing OI - Previous Day Closing OI` (CE & PE separately)
   - **Last 1-Hour OI Change**: `Current OI - OI 1 hour earlier` (CE & PE separately)
@@ -92,7 +92,7 @@
 
 ### 7. Database Layer
 - **Status**: **Schema Defined (Connection & Persistence Pending)**
-- **File**: `server/src/models/OptionChainSnapshot.ts`
+- **File**: `backend/src/models/OptionChainSnapshot.ts`
 - **Target Database**: MongoDB (via Mongoose)
 - **Current State**: Schema and indexing strategy are defined, but connection to a live MongoDB cluster and automated background snapshot storage are not yet active.
 

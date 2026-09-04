@@ -4,7 +4,7 @@
 
 The **OI Intelligence Dashboard** is designed to consume real-time and historical Option Chain data for Indian equity indices (NIFTY, BANK NIFTY, SENSEX) fetched via the **Dhan API v2**.
 
-The service layer structure (`server/src/services/dhanService.ts`) and controller (`server/src/controllers/optionChainController.ts`) are implemented to interface with Dhan endpoints once live credentials and payloads are mapped.
+The service layer structure (`backend/src/services/dhanService.ts`) and controller (`backend/src/controllers/optionChainController.ts`) are implemented to interface with Dhan endpoints once live credentials and payloads are mapped.
 
 ---
 
@@ -14,10 +14,10 @@ The service layer structure (`server/src/services/dhanService.ts`) and controlle
 > **Current Status**: **Structure Prepared (Pending Live Connection)**.  
 > Real Dhan API integration is **NOT** completed yet. Live data is not currently being fetched or stored.
 
-- [x] Configuration structure (`server/src/config/dhanConfig.ts`)
-- [x] Environment variable definitions (`server/.env.example`)
-- [x] Service handler wrapper (`server/src/services/dhanService.ts`)
-- [x] Option chain response normalization logic (`server/src/services/normalizationService.ts`)
+- [x] Configuration structure (`backend/src/config/dhanConfig.ts`)
+- [x] Environment variable definitions (`backend/.env.example`)
+- [x] Service handler wrapper (`backend/src/services/dhanService.ts`)
+- [x] Option chain response normalization logic (`backend/src/services/normalizationService.ts`)
 - [ ] Live API Access Token & Client ID configuration
 - [ ] Final Dhan API endpoint & payload mapping validation against live responses
 - [ ] Automated 5-minute fetch scheduler
@@ -26,7 +26,7 @@ The service layer structure (`server/src/services/dhanService.ts`) and controlle
 
 ## Credentials & Environment Configuration
 
-The integration requires the following environment variables set in `server/.env`:
+The integration requires the following environment variables set in `backend/.env`:
 
 ```env
 DHAN_ACCESS_TOKEN=your_dhan_access_token_here
@@ -40,7 +40,7 @@ DHAN_BASE_URL=https://api.dhan.co
 
 ## Targeted Data Fields
 
-The backend option-chain data layer standardizes Dhan responses into the following fields (`server/src/types/optionChain.ts`):
+The backend option-chain data layer standardizes Dhan responses into the following fields (`backend/src/types/optionChain.ts`):
 
 1. **Index**: Underlying asset symbol (`NIFTY`, `BANK NIFTY`, `SENSEX`).
 2. **Timestamp**: Snapshot ISO timestamp of market data capture.
