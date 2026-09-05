@@ -455,6 +455,14 @@ export class OICalculationService {
     latestStrikeDetails?: StrikeDetail[],
     frequency: '1m' | '3m' | '5m' = '3m'
   ): IndexDataset {
+    const effectiveStartTime = requestedStartTime || '09:15 AM';
+    const startMs = parseTimestamp(effectiveStartTime);
+    const endMs = requestedEndTime ? parseTimestamp(requestedEndTime) : Infinity;
+
+    if (startMs > endMs) {
+      throw new Error('Start time cannot be later than end time');
+    }
+
     const timeOptionsSet = new Set<string>();
     timeOptionsSet.add('09:15 AM');
     (snapshots || []).forEach((s) => timeOptionsSet.add(s.timeStr));
@@ -468,7 +476,7 @@ export class OICalculationService {
         selectedDate: dateStr,
         timeOptions,
         summary: {
-          startTime: requestedStartTime || '09:15 AM',
+          startTime: effectiveStartTime,
           endTime: requestedEndTime || '03:40 PM',
           startCallOI: 0,
           startPutOI: 0,
@@ -482,15 +490,6 @@ export class OICalculationService {
         rows: [],
         strikeDetails: latestStrikeDetails || []
       };
-    }
-
-    // Default start time to 09:15 AM if not provided
-    const effectiveStartTime = requestedStartTime || '09:15 AM';
-    const startMs = parseTimestamp(effectiveStartTime);
-    const endMs = requestedEndTime ? parseTimestamp(requestedEndTime) : Infinity;
-
-    if (startMs > endMs) {
-      throw new Error('Start time cannot be later than end time');
     }
 
     let filtered = snapshots.filter((s) => {
