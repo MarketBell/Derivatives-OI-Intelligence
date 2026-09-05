@@ -21,6 +21,18 @@ export interface UpstoxConfig {
   supportPhone: string;
 }
 
+const resolveJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const defaultDevSecret = 'biw_oi_mantra_default_secret_key_change_in_prod';
+
+  if (isProduction && (!secret || secret.trim() === '' || secret === defaultDevSecret)) {
+    throw new Error('FATAL SECURITY CONFIGURATION: In production mode, JWT_SECRET environment variable must be explicitly set to a strong secret key.');
+  }
+
+  return secret && secret.trim() !== '' ? secret : defaultDevSecret;
+};
+
 export const upstoxConfig: UpstoxConfig = {
   accessToken: process.env.UPSTOX_ACCESS_TOKEN || process.env.DHAN_ACCESS_TOKEN || '',
   clientId: process.env.UPSTOX_CLIENT_ID || process.env.DHAN_CLIENT_ID || '',
@@ -33,7 +45,7 @@ export const upstoxConfig: UpstoxConfig = {
     'SENSEX': 'BSE_INDEX|SENSEX'
   },
   platformName: 'BIW OI Mantra',
-  jwtSecret: process.env.JWT_SECRET || 'biw_oi_mantra_default_secret_key_change_in_prod',
+  jwtSecret: resolveJwtSecret(),
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   razorpayStaticPaymentLink: process.env.RAZORPAY_STATIC_PAYMENT_LINK || 'https://rzp.io/l/biw-oi-mantra-499',

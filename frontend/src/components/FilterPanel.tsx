@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, Info, SlidersHorizontal } from 'lucide-react';
+import { buildSortedTimeOptions } from '../utils/timeUtils';
 import type { FilterState, IndexType } from '../types/dashboard';
 
 interface FilterPanelProps {
@@ -38,9 +39,11 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
 
-  const displayTimeOptions = Array.from(
-    new Set(['09:15 AM', ...timeOptions, filters.startTime, filters.endTime].filter(Boolean))
-  );
+  const displayTimeOptions = buildSortedTimeOptions([
+    ...timeOptions,
+    filters.startTime,
+    filters.endTime,
+  ]);
 
   return (
     <div className="filter-card">

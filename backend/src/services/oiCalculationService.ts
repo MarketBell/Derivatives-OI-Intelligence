@@ -182,26 +182,28 @@ export function parseTimestamp(ts: string | Date): number {
     return time;
   }
   if (typeof ts === 'string') {
-    if (ts.trim() === '') {
+    const trimmed = ts.trim();
+    if (trimmed === '') {
       throw new Error('Invalid timestamp format');
     }
-    const parsed = Date.parse(ts);
+    const parsed = Date.parse(trimmed);
     if (!isNaN(parsed)) return parsed;
 
-    // Handle "HH:MM AM/PM" or "HH:MM" format
-    const timeMatch = ts.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+    // Handle "HH:MM", "HH:MM:SS", "HH:MM AM/PM", "HH:MM:SS AM/PM" format
+    const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$/i);
     if (timeMatch) {
       let hours = parseInt(timeMatch[1], 10);
       const minutes = parseInt(timeMatch[2], 10);
-      const ampm = timeMatch[3];
-      if (hours < 0 || hours > 24 || minutes < 0 || minutes > 59) {
+      const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+      const ampm = timeMatch[4];
+      if (hours < 0 || hours > 24 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
         throw new Error('Invalid timestamp format');
       }
       if (ampm) {
         if (ampm.toUpperCase() === 'PM' && hours < 12) hours += 12;
         if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
       }
-      const d = new Date(1970, 0, 1, hours, minutes, 0);
+      const d = new Date(1970, 0, 1, hours, minutes, seconds);
       return d.getTime();
     }
   }
@@ -502,15 +504,23 @@ export class OICalculationService {
     }
 
     if (filtered.length === 0) {
+      const lastSnap = snapshots && snapshots.length > 0 ? snapshots[snapshots.length - 1] : undefined;
       return {
         index: indexSymbol,
-        currentExpiry: latestExpiry,
+        currentExpiry: latestExpiry || lastSnap?.expiry,
+        spotPrice: lastSnap?.spotPrice,
+        atmStrike: lastSnap?.atmStrike,
+        pcr: lastSnap?.pcr,
         availableDates: availableDates.length > 0 ? availableDates : [dateStr],
         selectedDate: dateStr,
         timeOptions,
         summary: {
           startTime: effectiveStartTime,
-          endTime: requestedEndTime || '03:40 PM',
+          endTime: requestedEndTime || (lastSnap ? lastSnap.timeStr : '03:40 PM'),
+          currentExpiry: latestExpiry || lastSnap?.expiry,
+          spotPrice: lastSnap?.spotPrice,
+          atmStrike: lastSnap?.atmStrike,
+          pcr: lastSnap?.pcr,
           startCallOI: 0,
           startPutOI: 0,
           endCallOI: 0,
@@ -521,7 +531,7 @@ export class OICalculationService {
           putOIChangePct: 0
         },
         rows: [],
-        strikeDetails: latestStrikeDetails || []
+        strikeDetails: latestStrikeDetails || lastSnap?.strikeDetails || []
       };
     }
 

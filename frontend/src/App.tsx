@@ -10,7 +10,9 @@ import { Legend } from './components/Legend';
 import { AdminDashboard } from './components/AdminDashboard';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LoginPage } from './components/LoginPage';
+import { subtractMinutesFromTime } from './utils/timeUtils';
 import type { FilterState, IndexDataset, UserProfile } from './types/dashboard';
+import { API_BASE_URL } from './config/api';
 
 const initialEmptyDataset: IndexDataset = {
   index: 'NIFTY',
@@ -93,7 +95,7 @@ export function App() {
   useEffect(() => {
     if (!authToken) return;
 
-    fetch('http://localhost:5000/api/auth/me', {
+    fetch(`${API_BASE_URL}/api/auth/me`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
       .then((res) => {
@@ -137,7 +139,7 @@ export function App() {
         }
 
         const res = await fetch(
-          `http://localhost:5000/api/option-chain/time-series?${query.toString()}`,
+          `${API_BASE_URL}/api/option-chain/time-series?${query.toString()}`,
           { headers }
         );
         const json = await res.json();
@@ -221,6 +223,14 @@ export function App() {
       return;
     }
 
+    // If changing date, update state and trigger immediate fetch
+    if (updated.selectedDate && updated.selectedDate !== filters.selectedDate) {
+      const newFilters = { ...filters, selectedDate: updated.selectedDate };
+      setFilters(newFilters);
+      fetchBackendData(newFilters, true);
+      return;
+    }
+
     // If changing frequency, update state and trigger immediate fetch
     if (updated.frequency && updated.frequency !== filters.frequency) {
       const newFilters = { ...filters, frequency: updated.frequency };
@@ -234,7 +244,7 @@ export function App() {
         '5min': 5,
       };
       const interval = intervalMap[updated.frequency] || 3;
-      fetch('http://localhost:5000/api/option-chain/collector/start', {
+      fetch(`${API_BASE_URL}/api/option-chain/collector/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,33 +264,30 @@ export function App() {
     setFilters((prev) => ({ ...prev, ...updated }));
   };
 
-  // Quick Filters Handler (30min, 1hour, fullday)
+  // Quick Filters Handler (30min, 1hour, fullday) using REAL timestamp arithmetic
   const handleQuickFilter = (period: '30min' | '1hour' | 'fullday') => {
     setValidationError(null);
-    const times = dataset.timeOptions;
 
-    let startTime = '09:15 AM';
-    let endTime =
-      dataset.summary.endTime !== '--:--'
+    // End time is latest available snapshot time, summary end time, or default market close
+    const latestTime =
+      dataset.summary.endTime && dataset.summary.endTime !== '--:--'
         ? dataset.summary.endTime
-        : times.length > 0
-        ? times[times.length - 1]
+        : dataset.timeOptions && dataset.timeOptions.length > 0
+        ? dataset.timeOptions[dataset.timeOptions.length - 1]
         : '03:40 PM';
 
+    let startTime = '09:15 AM';
+    let endTime = latestTime;
+
     if (period === '30min') {
-      endTime = times.length > 0 ? times[times.length - 1] : '03:40 PM';
-      startTime = times.length > 6 ? times[times.length - 7] : times[0] || '03:00 PM';
+      endTime = latestTime;
+      startTime = subtractMinutesFromTime(endTime, 30);
     } else if (period === '1hour') {
-      endTime = times.length > 0 ? times[times.length - 1] : '03:40 PM';
-      startTime = times.length > 12 ? times[times.length - 13] : times[0] || '02:00 PM';
+      endTime = latestTime;
+      startTime = subtractMinutesFromTime(endTime, 60);
     } else if (period === 'fullday') {
       startTime = '09:15 AM';
-      endTime =
-        dataset.summary.endTime !== '--:--'
-          ? dataset.summary.endTime
-          : times.length > 0
-          ? times[times.length - 1]
-          : '03:40 PM';
+      endTime = latestTime;
     }
 
     const updatedFilters: FilterState = {
@@ -327,7 +334,7 @@ export function App() {
         headers['Authorization'] = `Bearer ${authToken}`;
       }
       await fetch(
-        `http://localhost:5000/api/option-chain/fetch?index=${filters.selectedIndex}`,
+        `${API_BASE_URL}/api/option-chain/fetch?index=${filters.selectedIndex}`,
         {
           method: 'POST',
           headers,

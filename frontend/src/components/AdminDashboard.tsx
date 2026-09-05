@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   Server,
@@ -15,6 +15,7 @@ import {
   Layers
 } from 'lucide-react';
 import type { CollectorStatusData, AdminUserItem, IndexType } from '../types/dashboard';
+import { API_BASE_URL } from '../config/api';
 
 interface AdminDashboardProps {
   isDarkMode: boolean;
@@ -44,7 +45,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
   const fetchCollectorStatus = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/option-chain/collection-status');
+      const res = await fetch(`${API_BASE_URL}/api/option-chain/collection-status`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -58,9 +59,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/subscription/users', {
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const res = await fetch(`${API_BASE_URL}/api/subscription/users`, {
         headers: {
-          'Authorization': 'Bearer admin_token_demo'
+          'Authorization': `Bearer ${token}`
         }
       });
       if (res.ok) {
@@ -77,6 +79,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   useEffect(() => {
     fetchCollectorStatus();
     fetchUsers();
+
     const interval = setInterval(() => {
       fetchCollectorStatus();
     }, 10000);
@@ -86,7 +89,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleStartCollector = async (intervalMinutes = 3) => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/option-chain/collector/start', {
+      const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleStopCollector = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/option-chain/collector/stop', {
+      const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/stop`, {
         method: 'POST'
       });
       const json = await res.json();
@@ -135,7 +138,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     setIsLoading(true);
     try {
       addLog(`Triggering immediate live fetch for ${selectedIndex} from Upstox API...`, 'info');
-      const res = await fetch(`http://localhost:5000/api/option-chain/fetch?index=${selectedIndex}`, {
+      const res = await fetch(`${API_BASE_URL}/api/option-chain/fetch?index=${selectedIndex}`, {
         method: 'POST'
       });
       const json = await res.json();
@@ -160,10 +163,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     if (!newEmail.trim()) return;
 
     try {
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/subscription/admin-grant', {
+      const res = await fetch(`${API_BASE_URL}/api/subscription/admin-grant`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           email: newEmail.trim(),
           durationDays: parseInt(grantDuration, 10) || 365,
@@ -195,10 +202,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     }
 
     try {
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/subscription/admin-revoke', {
+      const res = await fetch(`${API_BASE_URL}/api/subscription/admin-revoke`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ email })
       });
       const json = await res.json();

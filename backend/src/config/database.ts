@@ -15,7 +15,8 @@ export const connectDatabase = async (): Promise<boolean> => {
     });
 
     isConnected = conn.connection.readyState === 1;
-    Logger.info('Database', `Connected to MongoDB successfully at ${upstoxConfig.mongoUri}`);
+    const maskedUri = upstoxConfig.mongoUri.replace(/\/\/[^@]+@/, '//***:***@');
+    Logger.info('Database', `Connected to MongoDB successfully at ${maskedUri}`);
     return isConnected;
   } catch (error: any) {
     Logger.error('Database', `MongoDB connection failed: ${error.message}`);

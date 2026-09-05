@@ -384,6 +384,97 @@ describe('OI Calculation Service Pure Functions', () => {
       expect(res.rows.length).toBe(2);
       expect(res.rows.map((r) => r.time)).toEqual(['10:30 AM', '11:00 AM']);
     });
+
+    it('should parse timestamps with seconds correctly', () => {
+      expect(parseTimestamp('09:15:30 AM')).toBe(new Date(1970, 0, 1, 9, 15, 30).getTime());
+      expect(parseTimestamp('03:40:15 PM')).toBe(new Date(1970, 0, 1, 15, 40, 15).getTime());
+      expect(parseTimestamp('15:40:00')).toBe(new Date(1970, 0, 1, 15, 40, 0).getTime());
+    });
+
+    it('should correctly filter a 30-minute real timestamp window', () => {
+      // 03:00 PM to 03:30 PM is exactly 30 minutes
+      const res = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY',
+        '2026-08-31',
+        ['2026-08-31'],
+        snapshots,
+        '03:00 PM',
+        '03:30 PM'
+      );
+      expect(res.rows.length).toBe(2);
+      expect(res.rows[0].time).toBe('03:00 PM');
+      expect(res.rows[1].time).toBe('03:30 PM');
+      expect(res.summary.startTime).toBe('03:00 PM');
+      expect(res.summary.endTime).toBe('03:30 PM');
+    });
+
+    it('should correctly filter a 60-minute (1 hour) real timestamp window', () => {
+      // 10:00 AM to 11:00 AM is exactly 60 minutes
+      const res = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY',
+        '2026-08-31',
+        ['2026-08-31'],
+        snapshots,
+        '10:00 AM',
+        '11:00 AM'
+      );
+      expect(res.rows.length).toBe(3);
+      expect(res.rows.map((r) => r.time)).toEqual(['10:00 AM', '10:30 AM', '11:00 AM']);
+      expect(res.summary.startTime).toBe('10:00 AM');
+      expect(res.summary.endTime).toBe('11:00 AM');
+    });
+
+    it('should resample 1-minute stream to 1m, 3m, and 5m frequencies correctly', () => {
+      // Generate 16 snapshots from 10:00 AM to 10:15 AM
+      const minSnapshots = [];
+      for (let m = 0; m <= 15; m++) {
+        const minStr = String(m).padStart(2, '0');
+        minSnapshots.push({
+          timeStr: `10:${minStr} AM`,
+          totalCallOI: 100000 + m * 1000,
+          totalPutOI: 90000 + m * 500,
+          spotPrice: 24000,
+          atmStrike: 24000
+        });
+      }
+
+      const res1m = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY', '2026-08-31', ['2026-08-31'], minSnapshots, '10:00 AM', '10:15 AM', undefined, undefined, '1m'
+      );
+      const res3m = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY', '2026-08-31', ['2026-08-31'], minSnapshots, '10:00 AM', '10:15 AM', undefined, undefined, '3m'
+      );
+      const res5m = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY', '2026-08-31', ['2026-08-31'], minSnapshots, '10:00 AM', '10:15 AM', undefined, undefined, '5m'
+      );
+
+      expect(res1m.rows.length).toBe(16); // 1m has all 16 data points
+      expect(res3m.rows.length).toBe(6);  // 10:00, 10:03, 10:06, 10:09, 10:12, 10:15
+      expect(res5m.rows.length).toBe(4);  // 10:00, 10:05, 10:10, 10:15
+      expect(res3m.rows.map((r) => r.time)).toEqual(['10:00 AM', '10:03 AM', '10:06 AM', '10:09 AM', '10:12 AM', '10:15 AM']);
+      expect(res5m.rows.map((r) => r.time)).toEqual(['10:00 AM', '10:05 AM', '10:10 AM', '10:15 AM']);
+    });
+
+    it('should return empty rows with preserved spot/ATM metadata when no snapshots fall in the selected range', () => {
+      const snapshotsWithMeta = [
+        { timeStr: '09:15 AM', totalCallOI: 100000, totalPutOI: 100000, spotPrice: 24211, atmStrike: 24200, pcr: 1.0 },
+        { timeStr: '03:30 PM', totalCallOI: 135000, totalPutOI: 125000, spotPrice: 24250, atmStrike: 24250, pcr: 0.92 }
+      ];
+      const res = oiCalculationService.calculateTimeSeriesDataset(
+        'NIFTY',
+        '2026-08-31',
+        ['2026-08-31'],
+        snapshotsWithMeta,
+        '01:00 PM',
+        '02:00 PM' // no snapshots between 1:00 PM and 2:00 PM
+      );
+      expect(res.rows.length).toBe(0);
+      expect(res.summary.startTime).toBe('01:00 PM');
+      expect(res.summary.endTime).toBe('02:00 PM');
+      expect(res.spotPrice).toBe(24250); // Preserved from latest snapshot
+      expect(res.atmStrike).toBe(24250);
+      expect(res.pcr).toBe(0.92);
+    });
   });
 
 });
