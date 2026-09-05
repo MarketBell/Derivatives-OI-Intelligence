@@ -554,29 +554,57 @@ export class OICalculationService {
     const startSnap = filtered[0];
     const endSnap = filtered[filtered.length - 1];
 
-    const rows: OIRow[] = filtered.map((snapshot) => {
+    // Find 09:15 AM snapshot for the trading day to serve as daily baseline (or earliest snapshot if 09:15 AM is not explicitly present)
+    const baselineSnap = snapshots.find((s) => s.timeStr === '09:15 AM') || snapshots[0];
+    const baselineCallOI = baselineSnap ? baselineSnap.totalCallOI : startSnap.totalCallOI;
+    const baselinePutOI = baselineSnap ? baselineSnap.totalPutOI : startSnap.totalPutOI;
+
+    const rows: OIRow[] = filtered.map((snapshot, idx) => {
       const pcr = snapshot.pcr !== undefined
         ? snapshot.pcr
         : (snapshot.totalCallOI > 0
-            ? Math.round((snapshot.totalPutOI / snapshot.totalCallOI) * 100) / 100
+            ? Math.round((snapshot.totalPutOI / snapshot.totalCallOI) * 10000) / 10000
             : 0);
 
-      // Primary OI change against previous day closing baseline if present
-      let callChangeVal = snapshot.callOIChangeVal !== undefined
+      // Section 2: Open Interest Change (OI Change)
+      // Call OI Change(t) = TotalCallOI(t) - 09:15 AM Total Call OI Baseline
+      // Put OI Change(t) = TotalPutOI(t) - 09:15 AM Total Put OI Baseline
+      const callOIChange = this.round(snapshot.totalCallOI - baselineCallOI);
+      const putOIChange = this.round(snapshot.totalPutOI - baselinePutOI);
+
+      // Difference(t) = OIChange(t) - OIChange(previous interval)
+      // First snapshot of trading day / interval sequence has Difference = null
+      let callDifference: number | null = null;
+      let putDifference: number | null = null;
+
+      if (idx > 0) {
+        const prevSnap = filtered[idx - 1];
+        const prevCallOIChange = this.round(prevSnap.totalCallOI - baselineCallOI);
+        const prevPutOIChange = this.round(prevSnap.totalPutOI - baselinePutOI);
+
+        callDifference = this.round(callOIChange - prevCallOIChange);
+        putDifference = this.round(putOIChange - prevPutOIChange);
+      }
+
+      // Legacy/Alias properties for backwards compatibility
+      const prevCallClose = snapshot.previousCallOI ?? baselineCallOI;
+      const prevPutClose = snapshot.previousPutOI ?? baselinePutOI;
+
+      const fullDayCallChangeVal = snapshot.callOIChangeVal !== undefined
         ? snapshot.callOIChangeVal
-        : this.round(snapshot.totalCallOI - startSnap.totalCallOI);
+        : this.round(snapshot.totalCallOI - prevCallClose);
 
-      let callChangePct = snapshot.callOIChangePct !== undefined
+      const fullDayCallChangePct = snapshot.callOIChangePct !== undefined
         ? snapshot.callOIChangePct
-        : calculatePercentageChange(snapshot.totalCallOI, startSnap.totalCallOI);
+        : calculatePercentageChange(snapshot.totalCallOI, prevCallClose);
 
-      let putChangeVal = snapshot.putOIChangeVal !== undefined
+      const fullDayPutChangeVal = snapshot.putOIChangeVal !== undefined
         ? snapshot.putOIChangeVal
-        : this.round(snapshot.totalPutOI - startSnap.totalPutOI);
+        : this.round(snapshot.totalPutOI - prevPutClose);
 
-      let putChangePct = snapshot.putOIChangePct !== undefined
+      const fullDayPutChangePct = snapshot.putOIChangePct !== undefined
         ? snapshot.putOIChangePct
-        : calculatePercentageChange(snapshot.totalPutOI, startSnap.totalPutOI);
+        : calculatePercentageChange(snapshot.totalPutOI, prevPutClose);
 
       return {
         time: snapshot.timeStr,
@@ -585,10 +613,21 @@ export class OICalculationService {
         callOI: this.round(snapshot.totalCallOI),
         putOI: this.round(snapshot.totalPutOI),
         pcr,
-        callChangeVal,
-        callChangePct,
-        putChangeVal,
-        putChangePct
+        callOIChange,
+        putOIChange,
+        callDifference,
+        putDifference,
+        // Legacy/Alias properties
+        snapshotCallDiff: callDifference ?? 0,
+        snapshotPutDiff: putDifference ?? 0,
+        fullDayCallChangeVal,
+        fullDayCallChangePct,
+        fullDayPutChangeVal,
+        fullDayPutChangePct,
+        callChangeVal: callOIChange,
+        callChangePct: fullDayCallChangePct,
+        putChangeVal: putOIChange,
+        putChangePct: fullDayPutChangePct
       };
     });
 

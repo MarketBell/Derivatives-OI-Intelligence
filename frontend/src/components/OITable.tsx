@@ -1,10 +1,10 @@
 import React from 'react';
-import { Info, ArrowDown, ArrowUp } from 'lucide-react';
+import { Info } from 'lucide-react';
 import type { OIRow } from '../types/dashboard';
 
 interface OITableProps {
   rows: OIRow[];
-  startTime: string;
+  startTime?: string;
 }
 
 const formatVal = (val: number): string => {
@@ -15,7 +15,7 @@ const formatVal = (val: number): string => {
   }).format(val);
 };
 
-export const OITable: React.FC<OITableProps> = ({ rows, startTime }) => {
+export const OITable: React.FC<OITableProps> = ({ rows }) => {
   return (
     <div className="table-card">
       <div className="table-card-header">
@@ -27,27 +27,15 @@ export const OITable: React.FC<OITableProps> = ({ rows, startTime }) => {
         <table className="oi-table">
           <thead>
             <tr>
-              <th rowSpan={2} className="col-time">
-                Time
-              </th>
-              <th colSpan={2} className="header-group group-call">
-                CALL SIDE
-              </th>
-              <th colSpan={2} className="header-group group-put">
-                PUT SIDE
-              </th>
-            </tr>
-            <tr>
-              <th className="sub-header">(Value)</th>
-              <th className="sub-header">Change from {startTime}</th>
-              <th className="sub-header">(Value)</th>
-              <th className="sub-header">Change from {startTime}</th>
+              <th className="col-time">Time</th>
+              <th className="sub-header group-call">Total Call OI</th>
+              <th className="sub-header group-put">Total Put OI</th>
+              <th className="sub-header font-bold text-center">PCR</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => {
-              const isCallNeg = row.callChangeVal < 0;
-              const isPutNeg = row.putChangeVal < 0;
+              const pcrVal = row.pcr ?? (row.callOI > 0 ? Math.round((row.putOI / row.callOI) * 10000) / 10000 : 0);
 
               return (
                 <tr
@@ -56,34 +44,15 @@ export const OITable: React.FC<OITableProps> = ({ rows, startTime }) => {
                 >
                   <td className="cell-time">{row.time}</td>
                   
-                  {/* Call side value */}
+                  {/* Total Call OI */}
                   <td className="cell-num">{formatVal(row.callOI)}</td>
-                  
-                  {/* Call side change */}
-                  <td className="cell-num">
-                    {row.callChangeVal === 0 ? (
-                      '-'
-                    ) : (
-                      <span className={`flex-cell ${isCallNeg ? 'txt-red' : 'txt-green'}`}>
-                        {formatVal(row.callChangeVal)}
-                        {isCallNeg ? <ArrowDown className="w-3.5 h-3.5" /> : <ArrowUp className="w-3.5 h-3.5" />}
-                      </span>
-                    )}
-                  </td>
 
-                  {/* Put side value */}
+                  {/* Total Put OI */}
                   <td className="cell-num">{formatVal(row.putOI)}</td>
 
-                  {/* Put side change */}
-                  <td className="cell-num">
-                    {row.putChangeVal === 0 ? (
-                      '-'
-                    ) : (
-                      <span className={`flex-cell ${isPutNeg ? 'txt-red' : 'txt-green'}`}>
-                        {formatVal(row.putChangeVal)}
-                        {isPutNeg ? <ArrowDown className="w-3.5 h-3.5" /> : <ArrowUp className="w-3.5 h-3.5" />}
-                      </span>
-                    )}
+                  {/* PCR */}
+                  <td className="cell-num text-center font-mono font-semibold text-purple-700 dark:text-purple-300">
+                    {pcrVal > 0 ? pcrVal.toFixed(4) : '-'}
                   </td>
                 </tr>
               );

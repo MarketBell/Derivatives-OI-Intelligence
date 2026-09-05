@@ -4,7 +4,7 @@ import type { OIRow } from '../types/dashboard';
 
 interface OIChangeTableProps {
   rows: OIRow[];
-  startTime: string;
+  startTime?: string;
 }
 
 const formatVal = (val: number): string => {
@@ -14,11 +14,23 @@ const formatVal = (val: number): string => {
   }).format(val);
 };
 
-export const OIChangeTable: React.FC<OIChangeTableProps> = ({ rows, startTime }) => {
+const formatSigned = (val: number | null): React.ReactNode => {
+  if (val === null) return '—';
+  if (val === 0) return '—';
+  const isPos = val > 0;
+  const isNeg = val < 0;
+  return (
+    <span className={isNeg ? 'txt-red' : isPos ? 'txt-green' : 'txt-neutral'}>
+      {isPos ? `+${formatVal(val)}` : formatVal(val)}
+    </span>
+  );
+};
+
+export const OIChangeTable: React.FC<OIChangeTableProps> = ({ rows }) => {
   return (
     <div className="table-card">
       <div className="table-card-header">
-        <h3 className="table-title">OI CHANGE (DIFFERENCE FROM {startTime})</h3>
+        <h3 className="table-title">OPEN INTEREST CHANGE</h3>
         <Info className="w-4 h-4 text-purple-600 dark:text-purple-400 cursor-pointer" />
       </div>
 
@@ -37,18 +49,23 @@ export const OIChangeTable: React.FC<OIChangeTableProps> = ({ rows, startTime })
               </th>
             </tr>
             <tr>
-              <th className="sub-header">OI Change (Value)</th>
-              <th className="sub-header">OI Change (%)</th>
-              <th className="sub-header">OI Change (Value)</th>
-              <th className="sub-header">OI Change (%)</th>
+              <th className="sub-header">Call OI Change</th>
+              <th className="sub-header">Call Difference</th>
+              <th className="sub-header">Put OI Change</th>
+              <th className="sub-header">Put Difference</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => {
-              const isCallNeg = row.callChangeVal < 0;
-              const isCallPos = row.callChangeVal > 0;
-              const isPutNeg = row.putChangeVal < 0;
-              const isPutPos = row.putChangeVal > 0;
+              const callOIChange = row.callOIChange;
+              const callDiff = row.callDifference;
+              const putOIChange = row.putOIChange;
+              const putDiff = row.putDifference;
+
+              const isCallNeg = callOIChange < 0;
+              const isCallPos = callOIChange > 0;
+              const isPutNeg = putOIChange < 0;
+              const isPutPos = putOIChange > 0;
 
               return (
                 <tr
@@ -57,42 +74,32 @@ export const OIChangeTable: React.FC<OIChangeTableProps> = ({ rows, startTime })
                 >
                   <td className="cell-time">{row.time}</td>
 
-                  {/* Call side change value */}
+                  {/* Call OI Change */}
                   <td
                     className={`cell-num ${
                       isCallNeg ? 'txt-red' : isCallPos ? 'txt-green' : 'txt-neutral'
                     }`}
                   >
-                    {formatVal(row.callChangeVal)}
+                    {isCallPos ? `+${formatVal(callOIChange)}` : formatVal(callOIChange)}
                   </td>
 
-                  {/* Call side change pct */}
-                  <td
-                    className={`cell-num ${
-                      isCallNeg ? 'txt-red' : isCallPos ? 'txt-green' : 'txt-neutral'
-                    }`}
-                  >
-                    {row.callChangePct > 0 ? '+' : ''}
-                    {row.callChangePct.toFixed(2)}%
+                  {/* Call Difference */}
+                  <td className="cell-num">
+                    {formatSigned(callDiff)}
                   </td>
 
-                  {/* Put side change value */}
+                  {/* Put OI Change */}
                   <td
                     className={`cell-num ${
                       isPutNeg ? 'txt-red' : isPutPos ? 'txt-green' : 'txt-neutral'
                     }`}
                   >
-                    {formatVal(row.putChangeVal)}
+                    {isPutPos ? `+${formatVal(putOIChange)}` : formatVal(putOIChange)}
                   </td>
 
-                  {/* Put side change pct */}
-                  <td
-                    className={`cell-num ${
-                      isPutNeg ? 'txt-red' : isPutPos ? 'txt-green' : 'txt-neutral'
-                    }`}
-                  >
-                    {row.putChangePct > 0 ? '+' : ''}
-                    {row.putChangePct.toFixed(2)}%
+                  {/* Put Difference */}
+                  <td className="cell-num">
+                    {formatSigned(putDiff)}
                   </td>
                 </tr>
               );

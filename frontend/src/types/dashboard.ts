@@ -26,10 +26,20 @@ export interface OIRow {
   callOI: number;
   putOI: number;
   pcr?: number;
-  callChangeVal: number;
-  callChangePct: number;
-  putChangeVal: number;
-  putChangePct: number;
+  callOIChange: number;
+  putOIChange: number;
+  callDifference: number | null;
+  putDifference: number | null;
+  snapshotCallDiff?: number;
+  snapshotPutDiff?: number;
+  fullDayCallChangeVal?: number;
+  fullDayCallChangePct?: number;
+  fullDayPutChangeVal?: number;
+  fullDayPutChangePct?: number;
+  callChangeVal?: number;
+  callChangePct?: number;
+  putChangeVal?: number;
+  putChangePct?: number;
   isHighlighted?: boolean;
 }
 
