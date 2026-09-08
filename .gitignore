@@ -25,6 +25,8 @@ build/
 **/.env.*
 .env.local
 .env.*.local
+.fallback_store.json
+**/.fallback_store.json
 
 # OS & Editor files
 .DS_Store

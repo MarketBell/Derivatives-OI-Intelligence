@@ -20,7 +20,7 @@ export const OITable: React.FC<OITableProps> = ({ rows }) => {
     <div className="table-card">
       <div className="table-card-header">
         <h3 className="table-title">OPEN INTEREST (OI)</h3>
-        <Info className="w-4 h-4 text-purple-600 dark:text-purple-400 cursor-pointer" />
+        <Info className="w-4 h-4 text-emerald-400 cursor-pointer" />
       </div>
 
       <div className="table-wrapper">
@@ -51,7 +51,7 @@ export const OITable: React.FC<OITableProps> = ({ rows }) => {
                   <td className="cell-num">{formatVal(row.putOI)}</td>
 
                   {/* PCR */}
-                  <td className="cell-num text-center font-mono font-semibold text-purple-700 dark:text-purple-300">
+                  <td className="cell-num text-center font-mono font-semibold text-emerald-400">
                     {pcrVal > 0 ? pcrVal.toFixed(4) : '-'}
                   </td>
                 </tr>

@@ -554,11 +554,6 @@ export class OICalculationService {
     const startSnap = filtered[0];
     const endSnap = filtered[filtered.length - 1];
 
-    // Find 09:15 AM snapshot for the trading day to serve as daily baseline (or earliest snapshot if 09:15 AM is not explicitly present)
-    const baselineSnap = snapshots.find((s) => s.timeStr === '09:15 AM') || snapshots[0];
-    const baselineCallOI = baselineSnap ? baselineSnap.totalCallOI : startSnap.totalCallOI;
-    const baselinePutOI = baselineSnap ? baselineSnap.totalPutOI : startSnap.totalPutOI;
-
     const rows: OIRow[] = filtered.map((snapshot, idx) => {
       const pcr = snapshot.pcr !== undefined
         ? snapshot.pcr
@@ -566,42 +561,39 @@ export class OICalculationService {
             ? Math.round((snapshot.totalPutOI / snapshot.totalCallOI) * 10000) / 10000
             : 0);
 
-      // Section 2: Open Interest Change (OI Change)
-      // Call OI Change(t) = TotalCallOI(t) - 09:15 AM Total Call OI Baseline
-      // Put OI Change(t) = TotalPutOI(t) - 09:15 AM Total Put OI Baseline
-      const callOIChange = this.round(snapshot.totalCallOI - baselineCallOI);
-      const putOIChange = this.round(snapshot.totalPutOI - baselinePutOI);
+      // Open Interest Change (OI Change vs Previous Trading Day Close Baseline)
+      // Call OI Change(t) = TotalCallOI(t) - Previous Trading Day Closing Call OI
+      // Put OI Change(t) = TotalPutOI(t) - Previous Trading Day Closing Put OI
+      const fallbackCallBase = snapshots.length > 0 ? snapshots[0].totalCallOI : startSnap.totalCallOI;
+      const fallbackPutBase = snapshots.length > 0 ? snapshots[0].totalPutOI : startSnap.totalPutOI;
+      const prevCallClose = snapshot.previousCallOI !== undefined ? snapshot.previousCallOI : fallbackCallBase;
+      const prevPutClose = snapshot.previousPutOI !== undefined ? snapshot.previousPutOI : fallbackPutBase;
 
-      // Difference(t) = OIChange(t) - OIChange(previous interval)
-      // First snapshot of trading day / interval sequence has Difference = null
+      const callOIChange = snapshot.callOIChangeVal !== undefined
+        ? snapshot.callOIChangeVal
+        : this.round(snapshot.totalCallOI - prevCallClose);
+
+      const putOIChange = snapshot.putOIChangeVal !== undefined
+        ? snapshot.putOIChangeVal
+        : this.round(snapshot.totalPutOI - prevPutClose);
+
+      // Interval Difference(t) = Current Interval Snapshot OI - Previous Interval Snapshot OI
+      // First snapshot of interval sequence has Difference = null
       let callDifference: number | null = null;
       let putDifference: number | null = null;
 
       if (idx > 0) {
         const prevSnap = filtered[idx - 1];
-        const prevCallOIChange = this.round(prevSnap.totalCallOI - baselineCallOI);
-        const prevPutOIChange = this.round(prevSnap.totalPutOI - baselinePutOI);
-
-        callDifference = this.round(callOIChange - prevCallOIChange);
-        putDifference = this.round(putOIChange - prevPutOIChange);
+        callDifference = this.round(snapshot.totalCallOI - prevSnap.totalCallOI);
+        putDifference = this.round(snapshot.totalPutOI - prevSnap.totalPutOI);
       }
 
-      // Legacy/Alias properties for backwards compatibility
-      const prevCallClose = snapshot.previousCallOI ?? baselineCallOI;
-      const prevPutClose = snapshot.previousPutOI ?? baselinePutOI;
-
-      const fullDayCallChangeVal = snapshot.callOIChangeVal !== undefined
-        ? snapshot.callOIChangeVal
-        : this.round(snapshot.totalCallOI - prevCallClose);
-
+      const fullDayCallChangeVal = callOIChange;
       const fullDayCallChangePct = snapshot.callOIChangePct !== undefined
         ? snapshot.callOIChangePct
         : calculatePercentageChange(snapshot.totalCallOI, prevCallClose);
 
-      const fullDayPutChangeVal = snapshot.putOIChangeVal !== undefined
-        ? snapshot.putOIChangeVal
-        : this.round(snapshot.totalPutOI - prevPutClose);
-
+      const fullDayPutChangeVal = putOIChange;
       const fullDayPutChangePct = snapshot.putOIChangePct !== undefined
         ? snapshot.putOIChangePct
         : calculatePercentageChange(snapshot.totalPutOI, prevPutClose);
@@ -631,21 +623,24 @@ export class OICalculationService {
       };
     });
 
+    const endPrevCallClose = endSnap.previousCallOI !== undefined ? endSnap.previousCallOI : startSnap.totalCallOI;
+    const endPrevPutClose = endSnap.previousPutOI !== undefined ? endSnap.previousPutOI : startSnap.totalPutOI;
+
     const callOIChangeVal = endSnap.callOIChangeVal !== undefined
       ? endSnap.callOIChangeVal
-      : this.round(endSnap.totalCallOI - startSnap.totalCallOI);
+      : this.round(endSnap.totalCallOI - endPrevCallClose);
 
     const callOIChangePct = endSnap.callOIChangePct !== undefined
       ? endSnap.callOIChangePct
-      : calculatePercentageChange(endSnap.totalCallOI, startSnap.totalCallOI);
+      : calculatePercentageChange(endSnap.totalCallOI, endPrevCallClose);
 
     const putOIChangeVal = endSnap.putOIChangeVal !== undefined
       ? endSnap.putOIChangeVal
-      : this.round(endSnap.totalPutOI - startSnap.totalPutOI);
+      : this.round(endSnap.totalPutOI - endPrevPutClose);
 
     const putOIChangePct = endSnap.putOIChangePct !== undefined
       ? endSnap.putOIChangePct
-      : calculatePercentageChange(endSnap.totalPutOI, startSnap.totalPutOI);
+      : calculatePercentageChange(endSnap.totalPutOI, endPrevPutClose);
 
     const summaryPCR = endSnap.pcr !== undefined
       ? endSnap.pcr

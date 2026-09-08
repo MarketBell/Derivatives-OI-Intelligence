@@ -159,6 +159,48 @@ export const adminListUsers = async (
 };
 
 /**
+ * POST /api/subscription/admin-approve
+ * Approve a pending user account (Admin Only Endpoint)
+ */
+export const adminApproveUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const email = req.body.email || req.body.targetEmail;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        status: 'error',
+        message: 'Target user email is required.',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const adminUserId = (req.user as any)?._id?.toString() || (req.user as any)?.id || 'admin-root';
+    const result = await subscriptionService.approveUserAccess(email, adminUserId);
+
+    res.status(200).json({
+      success: true,
+      status: 'ok',
+      message: `User ${email} approved successfully. Dashboard access is now active.`,
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      status: 'error',
+      message: err.message || 'Failed to approve user access.',
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+/**
  * POST /api/subscription/admin-revoke
  * Revoke dashboard access from a user (Admin Only Endpoint)
  */
@@ -198,4 +240,5 @@ export const adminRevokeAccess = async (
     });
   }
 };
+
 

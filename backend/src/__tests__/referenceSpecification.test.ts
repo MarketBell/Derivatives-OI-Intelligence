@@ -198,7 +198,7 @@ describe('Reference Image Specification Verification Suite', () => {
       { timeStr: '09:24 AM', totalCallOI: 4500000, totalPutOI: 2100000, previousCallOI: 1800000, previousPutOI: 1400000 },
     ];
 
-    it('TEST 1 & TEST 8: 09:15 baseline is stored correctly and first snapshot has null Difference', () => {
+    it('TEST 1 & TEST 8: Previous Trading Day baseline is used correctly and first snapshot difference is null', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -215,13 +215,15 @@ describe('Reference Image Specification Verification Suite', () => {
       expect(r0915.time).toBe('09:15 AM');
       expect(r0915.callOI).toBe(2000000);
       expect(r0915.putOI).toBe(1500000);
-      expect(r0915.callOIChange).toBe(0);
-      expect(r0915.putOIChange).toBe(0);
+      // 09:15 Call OI Change = 2000000 - 1800000 (prev close) = +200,000
+      expect(r0915.callOIChange).toBe(200000);
+      // 09:15 Put OI Change = 1500000 - 1400000 (prev close) = +100,000
+      expect(r0915.putOIChange).toBe(100000);
       expect(r0915.callDifference).toBeNull();
       expect(r0915.putDifference).toBeNull();
     });
 
-    it('TEST 2: 09:18 Call OI Change: 45 L - 20 L = +25 L', () => {
+    it('TEST 2: 09:18 Call OI Change: 45 L - 18 L (Prev Close) = +27 L', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -236,10 +238,11 @@ describe('Reference Image Specification Verification Suite', () => {
 
       const r0918 = dataset.rows[1];
       expect(r0918.time).toBe('09:18 AM');
-      expect(r0918.callOIChange).toBe(2500000); // 45 L - 20 L = +25 L
+      expect(r0918.callOIChange).toBe(2700000); // 45 L - 18 L = +27 L
+      expect(r0918.callDifference).toBe(2500000); // 27 L - 2 L = +25 L
     });
 
-    it('TEST 3: 09:21 Call OI Change: 48 L - 20 L = +28 L', () => {
+    it('TEST 3: 09:21 Call OI Change: 48 L - 18 L (Prev Close) = +30 L', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -254,10 +257,10 @@ describe('Reference Image Specification Verification Suite', () => {
 
       const r0921 = dataset.rows[2];
       expect(r0921.time).toBe('09:21 AM');
-      expect(r0921.callOIChange).toBe(2800000); // 48 L - 20 L = +28 L
+      expect(r0921.callOIChange).toBe(3000000); // 48 L - 18 L = +30 L
     });
 
-    it('TEST 4: 09:21 Call Difference: 28 L - 25 L = +3 L', () => {
+    it('TEST 4: 09:21 Call Difference: 30 L - 27 L = +3 L', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -271,10 +274,10 @@ describe('Reference Image Specification Verification Suite', () => {
       );
 
       const r0921 = dataset.rows[2];
-      expect(r0921.callDifference).toBe(300000); // 28 L - 25 L = +3 L
+      expect(r0921.callDifference).toBe(300000); // 30 L - 27 L = +3 L
     });
 
-    it('TEST 5: 09:24 Call OI Change: 45 L - 20 L = +25 L', () => {
+    it('TEST 5: 09:24 Call OI Change: 45 L - 18 L (Prev Close) = +27 L', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -289,10 +292,10 @@ describe('Reference Image Specification Verification Suite', () => {
 
       const r0924 = dataset.rows[3];
       expect(r0924.time).toBe('09:24 AM');
-      expect(r0924.callOIChange).toBe(2500000); // 45 L - 20 L = +25 L
+      expect(r0924.callOIChange).toBe(2700000); // 45 L - 18 L = +27 L
     });
 
-    it('TEST 6: 09:24 Call Difference: 25 L - 28 L = -3 L', () => {
+    it('TEST 6: 09:24 Call Difference: 27 L - 30 L = -3 L', () => {
       const dataset = oiCalculationService.calculateTimeSeriesDataset(
         'NIFTY',
         '2026-09-05',
@@ -306,7 +309,7 @@ describe('Reference Image Specification Verification Suite', () => {
       );
 
       const r0924 = dataset.rows[3];
-      expect(r0924.callDifference).toBe(-300000); // 25 L - 28 L = -3 L
+      expect(r0924.callDifference).toBe(-300000); // 27 L - 30 L = -3 L
     });
 
     it('TEST 7: Equivalent Put calculations', () => {
@@ -322,20 +325,20 @@ describe('Reference Image Specification Verification Suite', () => {
         '3m'
       );
 
-      // 09:15 Put OI = 15 L -> Put OI Change = 0, Put Difference = null
-      expect(dataset.rows[0].putOIChange).toBe(0);
+      // 09:15 Put OI = 15 L, Prev Close = 14 L -> Put OI Change = +1 L, Put Difference = null
+      expect(dataset.rows[0].putOIChange).toBe(100000);
       expect(dataset.rows[0].putDifference).toBeNull();
 
-      // 09:18 Put OI = 20 L -> Put OI Change = 20 - 15 = +5 L, Put Difference = 5 - 0 = +5 L
-      expect(dataset.rows[1].putOIChange).toBe(500000);
+      // 09:18 Put OI = 20 L -> Put OI Change = 20 - 14 = +6 L, Put Difference = 6 - 1 = +5 L
+      expect(dataset.rows[1].putOIChange).toBe(600000);
       expect(dataset.rows[1].putDifference).toBe(500000);
 
-      // 09:21 Put OI = 24 L -> Put OI Change = 24 - 15 = +9 L, Put Difference = 9 - 5 = +4 L
-      expect(dataset.rows[2].putOIChange).toBe(900000);
+      // 09:21 Put OI = 24 L -> Put OI Change = 24 - 14 = +10 L, Put Difference = 10 - 6 = +4 L
+      expect(dataset.rows[2].putOIChange).toBe(1000000);
       expect(dataset.rows[2].putDifference).toBe(400000);
 
-      // 09:24 Put OI = 21 L -> Put OI Change = 21 - 15 = +6 L, Put Difference = 6 - 9 = -3 L
-      expect(dataset.rows[3].putOIChange).toBe(600000);
+      // 09:24 Put OI = 21 L -> Put OI Change = 21 - 14 = +7 L, Put Difference = 7 - 10 = -3 L
+      expect(dataset.rows[3].putOIChange).toBe(700000);
       expect(dataset.rows[3].putDifference).toBe(-300000);
     });
 
@@ -361,23 +364,23 @@ describe('Reference Image Specification Verification Suite', () => {
 
     it('TEST 10: Baseline resets on a new trading day', () => {
       const day1Snapshots = [
-        { timeStr: '09:15 AM', totalCallOI: 500000, totalPutOI: 400000 },
-        { timeStr: '09:18 AM', totalCallOI: 600000, totalPutOI: 450000 },
+        { timeStr: '09:15 AM', totalCallOI: 500000, totalPutOI: 400000, previousCallOI: 400000, previousPutOI: 350000 },
+        { timeStr: '09:18 AM', totalCallOI: 600000, totalPutOI: 450000, previousCallOI: 400000, previousPutOI: 350000 },
       ];
 
       const day2Snapshots = [
-        { timeStr: '09:15 AM', totalCallOI: 700000, totalPutOI: 800000 },
-        { timeStr: '09:18 AM', totalCallOI: 750000, totalPutOI: 820000 },
+        { timeStr: '09:15 AM', totalCallOI: 700000, totalPutOI: 800000, previousCallOI: 650000, previousPutOI: 750000 },
+        { timeStr: '09:18 AM', totalCallOI: 750000, totalPutOI: 820000, previousCallOI: 650000, previousPutOI: 750000 },
       ];
 
       const dsDay1 = oiCalculationService.calculateTimeSeriesDataset('NIFTY', '2026-09-05', ['2026-09-05'], day1Snapshots, '09:15 AM', '09:18 AM', '2026-09-10', [], '3m');
       const dsDay2 = oiCalculationService.calculateTimeSeriesDataset('NIFTY', '2026-09-06', ['2026-09-06'], day2Snapshots, '09:15 AM', '09:18 AM', '2026-09-10', [], '3m');
 
-      expect(dsDay1.rows[1].callOIChange).toBe(100000); // 600k - 500k
-      expect(dsDay2.rows[1].callOIChange).toBe(50000);   // 750k - 700k (reset to Day 2 09:15 baseline)
+      expect(dsDay1.rows[1].callOIChange).toBe(200000); // 600k - 400k (Day 1 Prev Close)
+      expect(dsDay2.rows[1].callOIChange).toBe(100000);   // 750k - 650k (Day 2 Prev Close)
     });
 
-    it('TEST 11: The OI Change calculation does NOT use previous-day closing OI', () => {
+    it('TEST 11: The OI Change calculation uses previous-day closing OI baseline', () => {
       const snapshotsWithPrevDayClose = [
         { timeStr: '09:15 AM', totalCallOI: 2000000, totalPutOI: 1500000, previousCallOI: 3000000, previousPutOI: 2500000 },
         { timeStr: '09:18 AM', totalCallOI: 2500000, totalPutOI: 1800000, previousCallOI: 3000000, previousPutOI: 2500000 },
@@ -396,10 +399,9 @@ describe('Reference Image Specification Verification Suite', () => {
       );
 
       // At 09:18 AM:
-      // Call OI Change MUST be 2500000 - 2000000 (09:15 baseline) = +500,000
-      // NOT 2500000 - 3000000 (previous day close) = -500,000
-      expect(dataset.rows[1].callOIChange).toBe(500000);
-      expect(dataset.rows[1].callOIChange).not.toBe(-500000);
+      // Call OI Change MUST be 2500000 - 3000000 (previous day close) = -500,000
+      expect(dataset.rows[1].callOIChange).toBe(-500000);
+      expect(dataset.rows[1].callOIChange).not.toBe(500000);
     });
   });
 

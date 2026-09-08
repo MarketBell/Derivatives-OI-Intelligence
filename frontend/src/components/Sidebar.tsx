@@ -5,6 +5,9 @@ import {
   Shield,
   User,
   LogOut,
+  Activity,
+  Sun,
+  Moon
 } from 'lucide-react';
 import type { UserProfile } from '../types/dashboard';
 
@@ -12,6 +15,8 @@ interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   currentUser?: UserProfile | null;
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
   onLogout: () => void;
 }
 
@@ -19,12 +24,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   currentUser,
+  isDarkMode = false,
+  onToggleTheme,
   onLogout,
 }) => {
   const isAdmin = currentUser?.role === 'admin';
 
   const menuItems = [
-    { id: 'dashboard', label: 'User Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'OI Dashboard', icon: LayoutDashboard },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin Portal', icon: Shield }] : []),
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -36,11 +43,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="sidebar-header">
           <div className="brand-logo">
             <div className="logo-icon">
-              <Shield className="w-5 h-5 text-purple-400" />
+              <Activity className="w-5 h-5" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">BILLIONIT</span>
-              <span className="brand-subtitle">WEALTH ANALYTICS</span>
+              <span className="brand-title">MARKET<span>BELL</span></span>
+              <span className="brand-subtitle">OI INTELLIGENCE</span>
             </div>
           </div>
         </div>
@@ -66,14 +73,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Area with Profile and Logout */}
       <div className="sidebar-footer-group">
+        {/* Theme Toggle Button */}
+        {onToggleTheme && (
+          <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={onToggleTheme}
+            title={`Switch to ${isDarkMode ? 'Day' : 'Night'} Mode`}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isDarkMode ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
+              <span>{isDarkMode ? 'Night Mode' : 'Day Mode'}</span>
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Toggle</span>
+          </button>
+        )}
+
         {/* User Profile Card */}
         <div className="user-profile-card">
           <div className="user-avatar-box">
-            <User className="w-4 h-4 text-purple-700" />
+            <User className="w-4 h-4" />
           </div>
           <div className="user-info">
-            <span className="user-name">{currentUser?.name || 'Authorized User'}</span>
-            <span className="user-email">{currentUser?.email || 'user@gmail.com'}</span>
+            <span className="user-name">{currentUser?.name || 'Authorized Trader'}</span>
+            <span className="user-email">{currentUser?.email || 'trader@gmail.com'}</span>
           </div>
           {isAdmin && (
             <span className="admin-pill-badge" title="Root Administrator">
@@ -84,8 +107,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Sign Out Button */}
         <div className="sidebar-footer">
-          <button className="logout-btn" onClick={onLogout} title="Sign Out of OI Intelligence">
-            <LogOut className="w-4 h-4 text-rose-400" />
+          <button className="logout-btn" onClick={onLogout} title="Sign Out of Terminal">
+            <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -93,4 +116,3 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
-

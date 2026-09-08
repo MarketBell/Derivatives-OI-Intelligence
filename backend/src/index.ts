@@ -122,6 +122,15 @@ if (process.env.NODE_ENV !== 'test') {
       Logger.info('Server', `Upstox Configured: ${isUpstoxConfigured() ? 'YES' : 'NO'}`);
       Logger.info('Server', `MongoDB Connected: ${isDatabaseConnected() ? 'YES' : 'NO'}`);
 
+      // Initialize Admin password if ADMIN_INITIAL_PASSWORD is provided in environment
+      if (process.env.ADMIN_INITIAL_PASSWORD && process.env.ADMIN_INITIAL_PASSWORD.trim().length >= 6) {
+        import('./utils/seedAdminPassword').then(({ seedAdminPassword }) => {
+          seedAdminPassword().catch((err) => {
+            Logger.warn('Server', `Failed to initialize admin credentials from environment: ${err.message}`);
+          });
+        });
+      }
+
       // Auto-start continuous collector at startup (default 3-minute interval)
       if (isUpstoxConfigured()) {
         collectorService.startCollector(3).catch((err) => {

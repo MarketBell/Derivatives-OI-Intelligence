@@ -1,14 +1,17 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { UserRole, AccessType, ThemePreference } from '../types/auth';
+import { UserRole, AccessType, AccountStatus, ThemePreference } from '../types/auth';
 
 export interface IUserDocument extends Document {
   email: string;
   name: string;
+  passwordHash?: string;
+  salt?: string;
   googleId?: string;
   picture?: string;
   phone?: string;
   role: UserRole;
   accessType: AccessType;
+  status: AccountStatus;
   preferences: {
     theme: ThemePreference;
   };
@@ -29,6 +32,12 @@ const UserSchema = new Schema<IUserDocument>({
     type: String,
     required: true,
     trim: true
+  },
+  passwordHash: {
+    type: String
+  },
+  salt: {
+    type: String
   },
   googleId: {
     type: String,
@@ -52,6 +61,12 @@ const UserSchema = new Schema<IUserDocument>({
     type: String,
     enum: ['none', 'paid', 'admin_free'],
     default: 'none',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'active', 'revoked'],
+    default: 'pending',
     required: true
   },
   preferences: {

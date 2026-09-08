@@ -31,7 +31,7 @@ export const OIChangeTable: React.FC<OIChangeTableProps> = ({ rows }) => {
     <div className="table-card">
       <div className="table-card-header">
         <h3 className="table-title">OPEN INTEREST CHANGE</h3>
-        <Info className="w-4 h-4 text-purple-600 dark:text-purple-400 cursor-pointer" />
+        <Info className="w-4 h-4 text-emerald-400 cursor-pointer" />
       </div>
 
       <div className="table-wrapper">

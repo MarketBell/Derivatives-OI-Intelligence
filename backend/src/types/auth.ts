@@ -1,6 +1,7 @@
 export type UserRole = 'user' | 'admin';
 export type AccessType = 'none' | 'paid' | 'admin_free';
 export type SubscriptionStatus = 'active' | 'expired' | 'inactive';
+export type AccountStatus = 'pending' | 'active' | 'revoked';
 export type ThemePreference = 'dark' | 'light';
 
 export interface UserPreferences {
@@ -16,6 +17,7 @@ export interface IUserProfile {
   phone?: string;
   role: UserRole;
   accessType: AccessType;
+  status: AccountStatus;
   preferences: UserPreferences;
   createdAt: Date;
 }
@@ -55,4 +57,15 @@ export interface UserStatusResponse {
   subscription: ISubscriptionDetails;
   hasAccess: boolean;
   support: PlatformSupportDetails;
+}
+
+export interface RegisterDto {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginDto {
+  email: string;
+  password?: string;
 }

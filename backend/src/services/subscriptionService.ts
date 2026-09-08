@@ -1,6 +1,8 @@
+import fs from 'fs';
+import path from 'path';
 import { User, IUserDocument } from '../models/User';
 import { Subscription, ISubscriptionDocument } from '../models/Subscription';
-import { UserStatusResponse, PlatformSupportDetails, ISubscriptionDetails, IUserProfile } from '../types/auth';
+import { UserStatusResponse, PlatformSupportDetails, ISubscriptionDetails, IUserProfile, AccountStatus } from '../types/auth';
 import { upstoxConfig } from '../config/upstoxConfig';
 import { isDatabaseConnected } from '../config/database';
 import { Logger } from '../utils/logger';
@@ -12,7 +14,9 @@ export interface MemoryUser {
   name: string;
   role: 'admin' | 'user';
   accessType: 'none' | 'paid' | 'admin_free';
-  status: 'active' | 'inactive';
+  status: AccountStatus;
+  passwordHash?: string;
+  salt?: string;
   grantedAt?: string;
   expiresAt?: string;
 }
@@ -29,14 +33,66 @@ const defaultMemoryUsers: MemoryUser[] = [
   }
 ];
 
+const FALLBACK_STORE_PATH = path.resolve(__dirname, '../../.fallback_store.json');
+
 export class SubscriptionService {
-  private memoryUsers: MemoryUser[] = [...defaultMemoryUsers];
+  private memoryUsers: MemoryUser[] = (() => {
+    let users: MemoryUser[];
+    try {
+      if (fs.existsSync(FALLBACK_STORE_PATH)) {
+        const raw = fs.readFileSync(FALLBACK_STORE_PATH, 'utf-8');
+        const parsed = JSON.parse(raw);
+        users = Array.isArray(parsed) && parsed.length > 0 ? parsed : [...defaultMemoryUsers];
+      } else {
+        users = [...defaultMemoryUsers];
+      }
+    } catch {
+      users = [...defaultMemoryUsers];
+    }
+
+    if (process.env.ADMIN_INITIAL_PASSWORD && process.env.ADMIN_INITIAL_PASSWORD.trim().length >= 6) {
+      try {
+        const { PasswordUtils } = require('../utils/passwordUtils');
+        const salt = PasswordUtils.generateSalt();
+        const hash = PasswordUtils.hashPassword(process.env.ADMIN_INITIAL_PASSWORD, salt);
+        const adminUser = users.find((u) => u.email.toLowerCase() === 'billionitwealth@gmail.com') || users[0];
+        if (adminUser) {
+          adminUser.passwordHash = hash;
+          adminUser.salt = salt;
+        }
+        try {
+          fs.writeFileSync(FALLBACK_STORE_PATH, JSON.stringify(users, null, 2), 'utf-8');
+        } catch {}
+      } catch (e) {
+        // Ignore if passwordUtils not yet resolved
+      }
+    }
+    return users;
+  })();
+
+  private saveFallbackStore(): void {
+    try {
+      fs.writeFileSync(FALLBACK_STORE_PATH, JSON.stringify(this.memoryUsers, null, 2), 'utf-8');
+    } catch {}
+  }
+
+  private syncFallbackStore(): void {
+    try {
+      if (fs.existsSync(FALLBACK_STORE_PATH)) {
+        const raw = fs.readFileSync(FALLBACK_STORE_PATH, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.memoryUsers = parsed;
+        }
+      }
+    } catch {}
+  }
 
   /**
    * Calculate remaining days dynamically from an explicit expiry date
    */
   public calculateRemainingDays(expiryDate?: Date): number {
-    if (!expiryDate) return 0;
+    if (!expiryDate) return -1; // -1 indicates non-expiring / continuous access
     const now = new Date();
     const diffTime = expiryDate.getTime() - now.getTime();
     if (diffTime <= 0) return 0;
@@ -46,9 +102,15 @@ export class SubscriptionService {
   /**
    * Determine whether a user has dashboard access based on role, admin grant, or paid subscription
    */
-  public checkUserAccess(user: IUserDocument, subscription?: ISubscriptionDocument | null): boolean {
+  public checkUserAccess(user: IUserDocument | any, subscription?: ISubscriptionDocument | null): boolean {
     if (user.role === 'admin' || user.email.toLowerCase() === 'billionitwealth@gmail.com') {
       return true;
+    }
+
+    // Must not be pending or revoked
+    const status: AccountStatus = user.status || (user.accessType !== 'none' ? 'active' : 'pending');
+    if (status !== 'active') {
+      return false;
     }
 
     if (user.accessType === 'admin_free') {
@@ -58,8 +120,7 @@ export class SubscriptionService {
     if (
       subscription &&
       subscription.status === 'active' &&
-      subscription.expiryDate &&
-      subscription.expiryDate.getTime() > Date.now()
+      (!subscription.expiryDate || subscription.expiryDate.getTime() > Date.now())
     ) {
       return true;
     }
@@ -95,6 +156,7 @@ export class SubscriptionService {
    */
   public formatUserProfile(user: IUserDocument | any): IUserProfile {
     const id = user._id ? user._id.toString() : (user.id || 'mem-user');
+    const status: AccountStatus = user.status || (user.role === 'admin' || user.accessType !== 'none' ? 'active' : 'pending');
     return {
       id,
       email: user.email,
@@ -103,9 +165,10 @@ export class SubscriptionService {
       picture: user.picture,
       phone: user.phone,
       role: user.role || 'user',
-      accessType: user.accessType || 'admin_free',
-      preferences: user.preferences,
-      createdAt: user.createdAt
+      accessType: user.accessType || 'none',
+      status,
+      preferences: user.preferences || { theme: 'dark' },
+      createdAt: user.createdAt || new Date()
     };
   }
 
@@ -130,15 +193,15 @@ export class SubscriptionService {
     const userId = user._id ? user._id.toString() : (user.id || 'mem-user');
     const sub = await this.getActiveSubscription(userId);
     const hasAccess = this.checkUserAccess(user, sub);
-    const daysRemaining = sub && sub.expiryDate ? this.calculateRemainingDays(sub.expiryDate) : 365;
+    const daysRemaining = sub && sub.expiryDate ? this.calculateRemainingDays(sub.expiryDate) : (hasAccess ? -1 : 0);
 
     const subscriptionDetails: ISubscriptionDetails = {
       id: sub ? (sub._id ? sub._id.toString() : (sub as any).id || '') : '',
       userId,
-      plan: sub ? sub.plan : 'monthly_499',
-      price: sub ? sub.price : 499,
+      plan: sub ? sub.plan : (user.accessType === 'admin_free' ? 'admin_approved_access' : 'monthly_499'),
+      price: sub ? sub.price : (user.accessType === 'admin_free' ? 0 : 499),
       currency: sub ? sub.currency : 'INR',
-      status: sub ? sub.status : (user.accessType === 'admin_free' ? 'active' : (user.status || 'inactive')),
+      status: sub ? sub.status : (hasAccess ? 'active' : 'inactive'),
       type: sub ? sub.type : user.accessType,
       startDate: sub?.startDate,
       expiryDate: sub?.expiryDate,
@@ -155,26 +218,84 @@ export class SubscriptionService {
   }
 
   /**
-   * List all authorized users for the Admin Dashboard
+   * List all users (pending, active, revoked, admin) for the Admin Dashboard
    */
   public async listAuthorizedUsers(): Promise<MemoryUser[]> {
     if (isDatabaseConnected()) {
       try {
         const users = await User.find({}).sort({ createdAt: -1 }).lean();
-        return users.map((u) => ({
-          id: u._id.toString(),
-          email: u.email,
-          name: u.name,
-          role: u.role,
-          accessType: u.accessType,
-          status: u.accessType !== 'none' || u.role === 'admin' ? 'active' : 'inactive',
-          grantedAt: u.createdAt ? new Date(u.createdAt).toISOString() : undefined
-        }));
+        return users.map((u) => {
+          const status: AccountStatus = u.status || (u.role === 'admin' || u.accessType !== 'none' ? 'active' : 'pending');
+          return {
+            id: u._id.toString(),
+            email: u.email,
+            name: u.name,
+            role: u.role,
+            accessType: u.accessType,
+            status,
+            grantedAt: u.createdAt ? new Date(u.createdAt).toISOString() : undefined
+          };
+        });
       } catch (err: any) {
         Logger.warn('SubscriptionService', `DB user list failed, falling back to memory: ${err.message}`);
       }
     }
+    this.syncFallbackStore();
     return [...this.memoryUsers];
+  }
+
+  /**
+   * Admin Approve a user (sets status to 'active' and grants admin_free access)
+   */
+  public async approveUserAccess(targetEmail: string, adminUserId?: string): Promise<any> {
+    const lowerEmail = targetEmail.toLowerCase().trim();
+
+    if (isDatabaseConnected()) {
+      let user = await User.findOne({ email: lowerEmail });
+      if (!user) {
+        throw new Error(`User with email ${lowerEmail} not found.`);
+      }
+
+      user.status = 'active';
+      user.accessType = 'admin_free';
+      await user.save();
+
+      await Subscription.findOneAndUpdate(
+        { userId: user._id, type: 'admin_free' },
+        {
+          userId: user._id,
+          plan: 'admin_approved_access',
+          price: 0,
+          currency: 'INR',
+          status: 'active',
+          type: 'admin_free',
+          startDate: new Date(),
+          grantedBy: adminUserId,
+          notes: 'Dashboard access approved by administrator'
+        },
+        { upsert: true, new: true }
+      );
+
+      Logger.info('SubscriptionService', `Admin approved access for ${lowerEmail}`);
+      return user;
+    } else {
+      const existing = this.memoryUsers.find((u) => u.email === lowerEmail);
+      if (existing) {
+        existing.status = 'active';
+        existing.accessType = 'admin_free';
+      } else {
+        this.memoryUsers.push({
+          id: `mem-${Date.now()}`,
+          email: lowerEmail,
+          name: lowerEmail.split('@')[0],
+          role: 'user',
+          accessType: 'admin_free',
+          status: 'active',
+          grantedAt: new Date().toISOString()
+        });
+      }
+      return { email: lowerEmail, status: 'active', accessType: 'admin_free' };
+    }
   }
 
   /**
@@ -196,16 +317,18 @@ export class SubscriptionService {
           name: lowerEmail.split('@')[0],
           role: 'user',
           accessType: 'admin_free',
+          status: 'active',
           preferences: { theme: 'dark' }
         });
       }
 
+      user.status = 'active';
+      user.accessType = 'admin_free';
+      await user.save();
+
       const startDate = new Date();
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + durationDays);
-
-      user.accessType = 'admin_free';
-      await user.save();
 
       await Subscription.findOneAndUpdate(
         { userId: user._id, type: 'admin_free' },
@@ -244,7 +367,7 @@ export class SubscriptionService {
           grantedAt: new Date().toISOString()
         });
       }
-      return { email: lowerEmail, accessType: 'admin_free', role: 'user' };
+      return { email: lowerEmail, accessType: 'admin_free', role: 'user', status: 'active' };
     }
   }
 
@@ -261,18 +384,19 @@ export class SubscriptionService {
     if (isDatabaseConnected()) {
       const user = await User.findOne({ email: lowerEmail });
       if (user) {
+        user.status = 'revoked';
         user.accessType = 'none';
         await user.save();
-        await Subscription.updateMany({ userId: user._id }, { status: 'expired' });
+        await Subscription.updateMany({ userId: user._id }, { status: 'inactive' });
       }
-      return { email: lowerEmail, accessType: 'none' };
+      return { email: lowerEmail, status: 'revoked', accessType: 'none' };
     } else {
       const memUser = this.memoryUsers.find((u) => u.email === lowerEmail);
       if (memUser) {
+        memUser.status = 'revoked';
         memUser.accessType = 'none';
-        memUser.status = 'inactive';
       }
-      return { email: lowerEmail, accessType: 'none' };
+      return { email: lowerEmail, status: 'revoked', accessType: 'none' };
     }
   }
 
@@ -293,16 +417,18 @@ export class SubscriptionService {
           name: lowerEmail.split('@')[0],
           role: 'user',
           accessType: 'paid',
+          status: 'active',
           preferences: { theme: 'dark' }
         });
       }
 
+      user.status = 'active';
+      user.accessType = 'paid';
+      await user.save();
+
       const startDate = new Date();
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + durationDays);
-
-      user.accessType = 'paid';
-      await user.save();
 
       const sub = await Subscription.findOneAndUpdate(
         { userId: user._id, status: 'active' },
@@ -337,10 +463,30 @@ export class SubscriptionService {
           status: 'active'
         });
       }
-      return { email: lowerEmail, accessType: 'paid' };
+      return { email: lowerEmail, accessType: 'paid', status: 'active' };
     }
+  }
+
+  /**
+   * Find a user in memory by email
+   */
+  public findMemoryUser(email: string): MemoryUser | undefined {
+    this.syncFallbackStore();
+    return this.memoryUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  /**
+   * Add or update a user in memory
+   */
+  public saveMemoryUser(user: MemoryUser): void {
+    const idx = this.memoryUsers.findIndex((u) => u.email.toLowerCase() === user.email.toLowerCase());
+    if (idx >= 0) {
+      this.memoryUsers[idx] = user;
+    } else {
+      this.memoryUsers.push(user);
+    }
+    this.saveFallbackStore();
   }
 }
 
 export const subscriptionService = new SubscriptionService();
-

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, Info, SlidersHorizontal } from 'lucide-react';
+import { Calendar, Clock, Info, SlidersHorizontal, Check } from 'lucide-react';
 import { buildSortedTimeOptions } from '../utils/timeUtils';
 import type { FilterState, IndexType } from '../types/dashboard';
 
@@ -38,7 +38,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
     }
   };
 
-
   const displayTimeOptions = buildSortedTimeOptions([
     ...timeOptions,
     filters.startTime,
@@ -51,23 +50,23 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       <div className="filter-grid-primary">
         {/* Index Selector */}
         <div className="filter-field">
-          <label className="filter-label">Index</label>
+          <label className="filter-label">Target Index</label>
           <select
             className="filter-select"
             value={filters.selectedIndex}
             onChange={(e) => onChangeFilter({ selectedIndex: e.target.value as IndexType })}
           >
-            <option value="NIFTY">Nifty</option>
-            <option value="BANK NIFTY">Bank Nifty</option>
-            <option value="SENSEX">Sensex</option>
+            <option value="NIFTY">NIFTY 50 (₹50 Step)</option>
+            <option value="BANK NIFTY">BANK NIFTY (₹100 Step)</option>
+            <option value="SENSEX">SENSEX (₹100 Step)</option>
           </select>
         </div>
 
         {/* Date Selector */}
         <div className="filter-field">
-          <label className="filter-label">Date</label>
+          <label className="filter-label">Trading Date</label>
           <div className="input-with-icon">
-            <Calendar className="field-icon text-purple-500" />
+            <Calendar className="field-icon" />
             <select
               className="filter-select select-icon-padded"
               value={filters.selectedDate}
@@ -86,7 +85,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         <div className="filter-field">
           <label className="filter-label">Start Time</label>
           <div className="input-with-icon">
-            <Clock className="field-icon text-purple-500" />
+            <Clock className="field-icon" />
             <select
               className="filter-select select-icon-padded"
               value={filters.startTime}
@@ -105,7 +104,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         <div className="filter-field">
           <label className="filter-label">End Time</label>
           <div className="input-with-icon">
-            <Clock className="field-icon text-purple-500" />
+            <Clock className="field-icon" />
             <select
               className="filter-select select-icon-padded"
               value={filters.endTime}
@@ -124,7 +123,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         <div className="filter-field">
           <label className="filter-label">Data Frequency</label>
           <div className="input-with-icon">
-            <SlidersHorizontal className="field-icon text-purple-500" />
+            <SlidersHorizontal className="field-icon" />
             <select
               className="filter-select select-icon-padded"
               value={currentFrequency}
@@ -133,7 +132,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               }
             >
               <option value="1min">1 Minute</option>
-              <option value="3min">3 Minutes</option>
+              <option value="3min">3 Minutes (Default)</option>
               <option value="5min">5 Minutes</option>
             </select>
           </div>
@@ -142,7 +141,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {/* Secondary Controls & Action Row */}
       <div className="filter-controls-row">
-        {/* Quick Filter Pills */}
+        {/* Quick Filter Pills (8px radius) */}
         <div className="quick-filters-container">
           <span className="controls-label">Quick Ranges:</span>
           <div className="quick-filter-buttons">
@@ -173,7 +172,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         {/* Action Buttons */}
         <div className="action-buttons-group">
           <button type="button" className="btn-primary" onClick={onApply}>
-            Apply Filters
+            <Check className="w-4 h-4" />
+            <span>Apply Filters</span>
           </button>
           <button type="button" className="btn-secondary" onClick={onReset}>
             Reset
@@ -184,22 +184,20 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       {/* Validation Error Banner */}
       {validationError && (
         <div className="filter-validation-alert">
-          <Info className="w-4 h-4 text-red-600 dark:text-red-400 mr-2" />
+          <Info className="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{validationError}</span>
         </div>
       )}
 
       {/* Dynamic Info Banner */}
       <div className="frequency-banner">
-
         <div className="info-badge">
-          <Info className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <Info className="w-4 h-4" />
         </div>
         <span className="banner-text">
-          Data Frequency: Every {getFrequencyText()} (9:15 AM to 3:40 PM)
+          Sampling cadence: <strong>{getFrequencyText()}</strong> (09:15 AM to 03:40 PM IST market hours)
         </span>
       </div>
     </div>
   );
 };
-

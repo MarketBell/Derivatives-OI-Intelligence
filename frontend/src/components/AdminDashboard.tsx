@@ -8,17 +8,19 @@ import {
   ShieldCheck,
   Users,
   UserPlus,
+  UserCheck,
   UserX,
   FileText,
   TrendingUp,
   Cpu,
-  Layers
+  Layers,
+  Clock
 } from 'lucide-react';
 import type { CollectorStatusData, AdminUserItem, IndexType } from '../types/dashboard';
 import { API_BASE_URL } from '../config/api';
 
 interface AdminDashboardProps {
-  isDarkMode: boolean;
+  isDarkMode?: boolean;
   onRefreshData?: () => void;
 }
 
@@ -32,8 +34,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<IndexType>('NIFTY');
   const [logs, setLogs] = useState<Array<{ time: string; message: string; level: 'info' | 'warn' | 'error' }>>([
-    { time: new Date().toLocaleTimeString(), message: 'Admin dashboard initialized. Upstox API active.', level: 'info' },
-    { time: new Date().toLocaleTimeString(), message: 'ATM + 4 OTM dynamic engine operational.', level: 'info' }
+    { time: new Date().toLocaleTimeString(), message: 'Market Bell Admin Console initialized. Upstox API active.', level: 'info' },
+    { time: new Date().toLocaleTimeString(), message: 'Dynamic ATM + 4 OTM calculations engine operational.', level: 'info' }
   ]);
 
   const addLog = (message: string, level: 'info' | 'warn' | 'error' = 'info') => {
@@ -86,12 +88,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     return () => clearInterval(interval);
   }, [fetchCollectorStatus, fetchUsers]);
 
+  const handleApproveUser = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const res = await fetch(`${API_BASE_URL}/api/subscription/admin-approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setActionMessage({ type: 'success', text: `Approved dashboard access for ${email}` });
+        addLog(`Admin approved access for ${email}. Status is now active.`, 'info');
+        fetchUsers();
+      } else {
+        setActionMessage({ type: 'error', text: json.message || 'Failed to approve access.' });
+      }
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleStartCollector = async (intervalMinutes = 3) => {
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
       const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/start`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           interval: intervalMinutes,
           index: selectedIndex,
@@ -118,14 +152,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleStopCollector = async () => {
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
       const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/stop`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       const json = await res.json();
       if (res.ok && json.success) {
         setCollectorStatus(json.data);
         setActionMessage({ type: 'success', text: 'Collector stopped.' });
         addLog('Live collector stopped by administrator.', 'warn');
+      } else {
+        setActionMessage({ type: 'error', text: json.message || 'Failed to stop collector.' });
       }
     } catch (err: any) {
       setActionMessage({ type: 'error', text: err.message });
@@ -138,13 +178,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     setIsLoading(true);
     try {
       addLog(`Triggering immediate live fetch for ${selectedIndex} from Upstox API...`, 'info');
+      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
       const res = await fetch(`${API_BASE_URL}/api/option-chain/fetch?index=${selectedIndex}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       const json = await res.json();
       if (res.ok && json.success) {
         setActionMessage({ type: 'success', text: `Live snapshot fetched for ${selectedIndex}` });
-        addLog(`Live snapshot received for ${selectedIndex}. Underlying spot: ${json.data?.underlyingValue}`, 'info');
+        addLog(`Live snapshot received for ${selectedIndex}. Underlying spot: ₹${json.data?.underlyingValue}`, 'info');
         fetchCollectorStatus();
       } else {
         setActionMessage({ type: 'error', text: json.message || 'Live fetch failed.' });
@@ -180,7 +224,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       const json = await res.json();
       if (res.ok && json.success) {
         setActionMessage({ type: 'success', text: `Granted access to ${newEmail}` });
-        addLog(`Granted admin free access to ${newEmail} for ${grantDuration} days.`, 'info');
+        addLog(`Granted admin access to ${newEmail}.`, 'info');
         setNewEmail('');
         setGrantNotes('');
         fetchUsers();
@@ -197,7 +241,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
   const handleRevokeAccess = async (email: string) => {
     if (email.toLowerCase() === 'billionitwealth@gmail.com') {
-      setActionMessage({ type: 'error', text: 'Cannot revoke access from administrator.' });
+      setActionMessage({ type: 'error', text: 'Cannot revoke access from root administrator.' });
       return;
     }
 
@@ -227,13 +271,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     }
   };
 
+  const pendingUsers = users.filter((u) => u.status === 'pending');
+  const otherUsers = users.filter((u) => u.status !== 'pending');
+
   return (
     <div className="admin-container">
       {/* Admin Header */}
       <div className="admin-header-card">
         <div className="admin-header-title-box">
           <div className="admin-badge-icon">
-            <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-300" />
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <h2 className="admin-title">ADMINISTRATIVE DASHBOARD & SYSTEM MONITOR</h2>
@@ -271,12 +318,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         </div>
       )}
 
+      {/* SECTION 1: PENDING APPROVALS QUEUE */}
+      {pendingUsers.length > 0 && (
+        <div className="admin-panel-card" style={{ border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+          <div className="panel-title-row">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock className="w-4 h-4 text-amber-500" />
+              <h3 className="panel-title" style={{ color: 'var(--warning-gold)' }}>
+                Pending User Registration Approvals ({pendingUsers.length})
+              </h3>
+            </div>
+          </div>
+          <div className="users-table-scroll" style={{ maxHeight: '200px' }}>
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Registered At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingUsers.map((u) => (
+                  <tr key={u.id || u.email}>
+                    <td className="user-email-cell">{u.email}</td>
+                    <td>{u.name || '-'}</td>
+                    <td>
+                      <span className="status-pill pill-pending">PENDING</span>
+                    </td>
+                    <td>{u.grantedAt ? new Date(u.grantedAt).toLocaleDateString() : 'Recent'}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-approve"
+                        onClick={() => handleApproveUser(u.email)}
+                        disabled={isLoading}
+                        title="Approve User Dashboard Access"
+                      >
+                        <UserCheck className="w-3.5 h-3.5 mr-1" /> Approve Access
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Grid: A. System Overview & B. Data Collection Controls */}
       <div className="admin-grid-top">
         {/* Card A: System Overview */}
         <div className="admin-panel-card">
           <div className="panel-title-row">
-            <Server className="w-4 h-4 text-purple-500" />
+            <Server className="w-4 h-4 text-indigo-500" />
             <h3 className="panel-title">A. System Overview</h3>
           </div>
 
@@ -317,7 +414,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Card B: Data Collection Controls */}
         <div className="admin-panel-card">
           <div className="panel-title-row">
-            <Activity className="w-4 h-4 text-purple-500" />
+            <Activity className="w-4 h-4 text-indigo-500" />
             <h3 className="panel-title">B. Data Collection Pipeline Control</h3>
           </div>
 
@@ -403,7 +500,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Card C: Index Status */}
         <div className="admin-panel-card">
           <div className="panel-title-row">
-            <TrendingUp className="w-4 h-4 text-purple-500" />
+            <TrendingUp className="w-4 h-4 text-indigo-500" />
             <h3 className="panel-title">C. Index Live Status</h3>
           </div>
 
@@ -412,7 +509,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
               <span className="stat-index-name">{selectedIndex}</span>
               <div className="stat-row">
                 <span className="stat-lbl">Live Spot:</span>
-                <span className="stat-val font-bold">?{collectorStatus?.spotPrice?.toLocaleString() || '-'}</span>
+                <span className="stat-val font-bold">₹{collectorStatus?.spotPrice?.toLocaleString() || '-'}</span>
               </div>
               <div className="stat-row">
                 <span className="stat-lbl">Active Expiry:</span>
@@ -420,7 +517,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
               </div>
               <div className="stat-row">
                 <span className="stat-lbl">Dynamic ATM:</span>
-                <span className="stat-val atm-pill">?{collectorStatus?.atmStrike?.toLocaleString() || '-'}</span>
+                <span className="stat-val atm-pill">₹{collectorStatus?.atmStrike?.toLocaleString() || '-'}</span>
               </div>
             </div>
           </div>
@@ -429,8 +526,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Card D: Calculation Status */}
         <div className="admin-panel-card">
           <div className="panel-title-row">
-            <Cpu className="w-4 h-4 text-purple-500" />
-            <h3 className="panel-title">D. Calculation Status (MOM/PDF Rules)</h3>
+            <Cpu className="w-4 h-4 text-indigo-500" />
+            <h3 className="panel-title">D. Calculation Status (MOM Rules)</h3>
           </div>
 
           <div className="calc-status-list">
@@ -460,7 +557,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Card E: Data Health / Validation */}
         <div className="admin-panel-card">
           <div className="panel-title-row">
-            <Layers className="w-4 h-4 text-purple-500" />
+            <Layers className="w-4 h-4 text-indigo-500" />
             <h3 className="panel-title">E. Data Health & Validation</h3>
           </div>
 
@@ -475,7 +572,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             </div>
             <div className="health-row">
               <span className="health-label">Strike Spacing Enforced:</span>
-              <span className="status-badge badge-green">?50 / ?100 Standardized</span>
+              <span className="status-badge badge-green">₹50 / ₹100 Standardized</span>
             </div>
             <div className="health-row">
               <span className="health-label">Market Session Guard:</span>
@@ -488,22 +585,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       {/* Card G: User Access Management */}
       <div className="admin-panel-card user-access-panel">
         <div className="panel-title-row">
-          <Users className="w-4 h-4 text-purple-500" />
-          <h3 className="panel-title">G. User Access Management (Gmail Authorization)</h3>
+          <Users className="w-4 h-4 text-indigo-500" />
+          <h3 className="panel-title">G. User Access Management</h3>
         </div>
 
         <div className="user-management-grid">
           {/* Grant Form */}
           <form className="grant-access-form" onSubmit={handleGrantAccess}>
             <h4 className="form-title">
-              <UserPlus className="w-4 h-4 inline mr-1 text-purple-600" /> Grant User Access
+              <UserPlus className="w-4 h-4 inline mr-1 text-indigo-500" /> Grant / Invite Trader Access
             </h4>
             <div className="form-group">
               <label className="form-label">User Gmail ID:</label>
               <input
                 type="email"
                 className="form-input"
-                placeholder="user@gmail.com"
+                placeholder="trader@gmail.com"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
@@ -528,7 +625,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g. VIP Client Access"
+                  placeholder="e.g. VIP Trader Access"
                   value={grantNotes}
                   onChange={(e) => setGrantNotes(e.target.value)}
                 />
@@ -541,20 +638,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
           {/* User List Table */}
           <div className="users-list-wrapper">
-            <h4 className="form-title">Authorized Users List</h4>
+            <h4 className="form-title">Authorized Accounts ({otherUsers.length})</h4>
             <div className="users-table-scroll">
               <table className="users-table">
                 <thead>
                   <tr>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Access Type</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {otherUsers.map((u) => (
                     <tr key={u.id || u.email}>
                       <td className="user-email-cell">{u.email}</td>
                       <td>
@@ -562,22 +658,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                           {u.role.toUpperCase()}
                         </span>
                       </td>
-                      <td>{u.accessType === 'admin_free' ? 'Admin Free Access' : u.accessType}</td>
                       <td>
-                        <span className={`status-pill ${u.status === 'active' ? 'pill-active' : 'pill-inactive'}`}>
+                        <span className={`status-pill ${u.status === 'active' ? 'pill-active' : u.status === 'pending' ? 'pill-pending' : 'pill-revoked'}`}>
                           {u.status}
                         </span>
                       </td>
                       <td>
                         {u.email.toLowerCase() !== 'billionitwealth@gmail.com' ? (
-                          <button
-                            type="button"
-                            className="btn-revoke"
-                            onClick={() => handleRevokeAccess(u.email)}
-                            title="Revoke User Access"
-                          >
-                            <UserX className="w-3.5 h-3.5 mr-1" /> Revoke
-                          </button>
+                          <div className="user-action-cell">
+                            {u.status === 'revoked' ? (
+                              <button
+                                type="button"
+                                className="btn-approve"
+                                onClick={() => handleApproveUser(u.email)}
+                                title="Re-enable Access"
+                              >
+                                Re-enable
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn-revoke"
+                                onClick={() => handleRevokeAccess(u.email)}
+                                title="Revoke User Access"
+                              >
+                                <UserX className="w-3.5 h-3.5 mr-1" /> Revoke
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <span className="root-tag">Root Admin</span>
                         )}
@@ -594,7 +702,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       {/* Card F: Live System Logs */}
       <div className="admin-panel-card">
         <div className="panel-title-row">
-          <FileText className="w-4 h-4 text-purple-500" />
+          <FileText className="w-4 h-4 text-indigo-500" />
           <h3 className="panel-title">F. Real-Time System Logs</h3>
           <button className="btn-clear-logs" onClick={() => setLogs([])}>
             Clear Logs
@@ -618,4 +726,3 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     </div>
   );
 };
-

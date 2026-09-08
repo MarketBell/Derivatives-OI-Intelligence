@@ -30,13 +30,13 @@ export const StrikeWiseOITable: React.FC<StrikeWiseOITableProps> = ({
       <div className="table-card-header">
         <div className="strike-header-left">
           <div className="strike-icon-badge">
-            <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <Target className="w-4 h-4" />
           </div>
           <div>
             <h3 className="table-title">STRIKE-WISE OPTION CHAIN (ATM + 4 OTM)</h3>
             <p className="table-subtitle">
-              Dynamic Spot: <strong>?{formatNumber(spotPrice)}</strong> | ATM Strike:{' '}
-              <span className="atm-pill">?{formatNumber(atmStrike)}</span>
+              Dynamic Spot: <strong>₹{formatNumber(spotPrice)}</strong> | ATM Strike:{' '}
+              <span className="atm-pill">₹{formatNumber(atmStrike)}</span>
             </p>
           </div>
         </div>
@@ -63,13 +63,13 @@ export const StrikeWiseOITable: React.FC<StrikeWiseOITableProps> = ({
             </tr>
             <tr>
               <th className="sub-header">Volume</th>
-              <th className="sub-header">LTP (?)</th>
+              <th className="sub-header">LTP (₹)</th>
               <th className="sub-header">OI Change (vs Prev Close)</th>
               <th className="sub-header">Open Interest</th>
 
               <th className="sub-header">Open Interest</th>
               <th className="sub-header">OI Change (vs Prev Close)</th>
-              <th className="sub-header">LTP (?)</th>
+              <th className="sub-header">LTP (₹)</th>
               <th className="sub-header">Volume</th>
             </tr>
           </thead>

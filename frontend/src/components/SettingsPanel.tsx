@@ -16,7 +16,7 @@ interface SettingsPanelProps {
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => {
   const [name, setName] = useState(currentUser?.name || 'Authorized Trader');
-  const [email, setEmail] = useState(currentUser?.email || 'user@gmail.com');
+  const [email, setEmail] = useState(currentUser?.email || 'trader@gmail.com');
   const [phone, setPhone] = useState(currentUser?.phone || '+91 98765 43210');
 
   const [defaultIndex, setDefaultIndex] = useState('NIFTY');
@@ -24,7 +24,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
 
   const [oiAlerts, setOiAlerts] = useState(true);
   const [divergenceAlerts, setDivergenceAlerts] = useState(true);
-  const [soundNotifications, setSoundNotifications] = useState(false);
 
   const [isSaved, setIsSaved] = useState(false);
 
@@ -42,19 +41,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
       <div className="settings-header">
         <div className="settings-header-left">
           <div className="settings-icon-box">
-            <Sliders className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+            <Sliders className="w-5 h-5" />
           </div>
           <div>
             <h1 className="settings-title">Settings & Preferences</h1>
             <p className="settings-sub">
-              Manage your profile details, default index preferences, and alert triggers
+              Manage your trader profile, default indices, and threshold alerts
             </p>
           </div>
         </div>
 
         {isSaved && (
           <div className="settings-toast">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>Preferences saved successfully!</span>
           </div>
         )}
@@ -64,13 +63,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
         {/* Card 1: User Profile */}
         <div className="settings-card">
           <div className="card-header-row">
-            <User className="w-5 h-5 text-purple-600" />
-            <h2 className="card-section-title">User Profile</h2>
+            <User className="w-5 h-5" />
+            <h2 className="card-section-title">Trader Profile</h2>
           </div>
           <div className="card-body-stack">
             <div className="settings-user-preview">
               <div className="avatar-circle">
-                <User className="w-6 h-6 text-purple-700" />
+                <User className="w-5 h-5" />
               </div>
               <div>
                 <span className="preview-name">{name}</span>
@@ -89,7 +88,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
             </div>
 
             <div className="form-field">
-              <label className="form-label">Email Address</label>
+              <label className="form-label">Gmail Address (Verified)</label>
               <input
                 type="email"
                 className="form-input"
@@ -100,7 +99,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
             </div>
 
             <div className="form-field">
-              <label className="form-label">Phone Number</label>
+              <label className="form-label">Contact Phone</label>
               <input
                 type="text"
                 className="form-input"
@@ -114,12 +113,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
         {/* Card 2: Trading Defaults */}
         <div className="settings-card">
           <div className="card-header-row">
-            <Activity className="w-5 h-5 text-purple-600" />
+            <Activity className="w-5 h-5" />
             <h2 className="card-section-title">Trading Defaults</h2>
           </div>
           <div className="card-body-stack">
             <div className="form-field">
-              <label className="form-label">Default Trading Index</label>
+              <label className="form-label">Default Target Index</label>
               <select
                 className="form-select"
                 value={defaultIndex}
@@ -132,7 +131,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
             </div>
 
             <div className="form-field">
-              <label className="form-label">Default Collection Frequency</label>
+              <label className="form-label">Default Sampling Cadence</label>
               <select
                 className="form-select"
                 value={defaultFreq}
@@ -149,14 +148,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
         {/* Card 3: Alert & Signal Notifications */}
         <div className="settings-card">
           <div className="card-header-row">
-            <Bell className="w-5 h-5 text-purple-600" />
-            <h2 className="card-section-title">Alert Triggers</h2>
+            <Bell className="w-5 h-5" />
+            <h2 className="card-section-title">Signal Alerts</h2>
           </div>
           <div className="card-body-stack">
             <div className="toggle-row">
               <div>
-                <span className="toggle-label">OI Surge Alerts</span>
-                <span className="toggle-sub">Notify when Call/Put OI jumps &gt; 5%</span>
+                <span className="toggle-label">OI Surge Triggers</span>
+                <span className="toggle-sub">Notify when Call/Put OI shifts &gt; 5%</span>
               </div>
               <input
                 type="checkbox"
@@ -178,34 +177,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
                 onChange={(e) => setDivergenceAlerts(e.target.checked)}
               />
             </div>
-
-            <div className="toggle-row">
-              <div>
-                <span className="toggle-label">Audio Alerts</span>
-                <span className="toggle-sub">Play subtle alert sound on updates</span>
-              </div>
-              <input
-                type="checkbox"
-                className="toggle-checkbox"
-                checked={soundNotifications}
-                onChange={(e) => setSoundNotifications(e.target.checked)}
-              />
-            </div>
           </div>
         </div>
 
         {/* Form Action Controls */}
         <div className="settings-actions-bar">
-          <button type="submit" className="btn-primary flex items-center gap-2">
+          <button type="submit" className="btn-primary">
             <Save className="w-4 h-4" />
             <span>Save Preferences</span>
           </button>
           <button
             type="button"
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary"
             onClick={() => {
               setName(currentUser?.name || 'Authorized Trader');
-              setEmail(currentUser?.email || 'user@gmail.com');
+              setEmail(currentUser?.email || 'trader@gmail.com');
               setPhone('+91 98765 43210');
               setDefaultIndex('NIFTY');
               setDefaultFreq('3min');

@@ -96,7 +96,7 @@ export interface AdminUserItem {
   name: string;
   role: 'admin' | 'user';
   accessType: 'none' | 'paid' | 'admin_free';
-  status: 'active' | 'inactive';
+  status: 'pending' | 'active' | 'revoked' | 'inactive';
   grantedAt?: string;
   expiresAt?: string;
 }
@@ -151,8 +151,7 @@ export interface UserProfile {
   name: string;
   role: 'admin' | 'user';
   accessType: 'none' | 'paid' | 'admin_free';
+  status?: 'pending' | 'active' | 'revoked';
   picture?: string;
   phone?: string;
 }
-
-

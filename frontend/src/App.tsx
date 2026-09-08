@@ -63,7 +63,26 @@ export function App() {
     frequency: '3min',
   });
 
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('oi_theme') === 'dark';
+  });
+
   const [dataset, setDataset] = useState<IndexDataset>(initialEmptyDataset);
+
+  // Sync theme class to document element
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('oi_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('oi_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const handleToggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
 
   // Active ref to prevent stale responses during rapid index switching
   const activeFetchIndexRef = useRef<string>(filters.selectedIndex);
@@ -362,13 +381,15 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentUser={currentUser}
+        isDarkMode={isDarkMode}
+        onToggleTheme={handleToggleTheme}
         onLogout={handleLogout}
       />
 
       <main className="main-content">
         {activeTab === 'admin' && currentUser.role === 'admin' ? (
           <AdminDashboard
-            isDarkMode={false}
+            isDarkMode={isDarkMode}
             onRefreshData={() => fetchBackendData(filters, true)}
           />
         ) : activeTab === 'settings' ? (
@@ -412,25 +433,14 @@ export function App() {
 
             {/* Time-Series Snapshots Table */}
             {dataset.rows.length === 0 ? (
-              <div
-                className="empty-state-card"
-                style={{
-                  padding: '2.5rem',
-                  textAlign: 'center',
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  marginTop: '1rem',
-                  border: '1px dashed #a855f7',
-                  boxShadow: '0 4px 20px rgba(139, 92, 246, 0.08)',
-                }}
-              >
-                <p style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e152d' }}>
+              <div className="empty-state-card">
+                <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {isLoading
                     ? `Fetching live Upstox Option Chain for ${filters.selectedIndex}...`
                     : `No snapshots recorded for ${filters.selectedIndex} between ${effectiveStartTime} and ${effectiveEndTime}`}
                 </p>
-                <p style={{ color: '#6b5c82', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  Click <strong>Refresh Data</strong> to pull the latest live Upstox snapshot.
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  Click <strong>Refresh</strong> in the header or apply a different time filter to view option chain snapshots.
                 </p>
               </div>
             ) : (

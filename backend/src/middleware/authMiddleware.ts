@@ -79,12 +79,12 @@ export const authenticateJWT = async (
       return;
     }
 
-    // If non-admin user status has been revoked to inactive, reject
-    if (user.role !== 'admin' && (user.status === 'inactive' || user.accessType === 'none')) {
+    // If non-admin user status is pending or revoked, reject
+    if (user.role !== 'admin' && (user.status === 'revoked' || user.status === 'pending' || user.accessType === 'none')) {
       res.status(403).json({
         success: false,
-        status: 'unauthorized',
-        message: 'Access revoked. Your account is no longer authorized.',
+        status: user.status === 'pending' ? 'pending_approval' : 'unauthorized',
+        message: user.status === 'pending' ? 'Account pending administrator approval.' : 'Access revoked. Your account is no longer authorized.',
         timestamp: new Date().toISOString()
       });
       return;
