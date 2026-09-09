@@ -5,8 +5,8 @@
 The **OI Intelligence Dashboard** backend uses **MongoDB** (via Mongoose) to store periodic option-chain snapshots collected during market hours.
 
 > [!IMPORTANT]
-> **Current Status**: **Schema Prepared (Connection & Persistence Pending)**.  
-> MongoDB connection setup (`backend/src/config/database.ts`) and snapshot schema (`backend/src/models/OptionChainSnapshot.ts`) exist in the codebase, but active database connection and live background snapshot persistence are **NOT** completed yet.
+> **Current Status**: **Active — Connected to MongoDB Atlas**.  
+> MongoDB connection setup (`backend/src/config/database.ts`) and snapshot schema (`backend/src/models/OptionChainSnapshot.ts`) are actively used for snapshot persistence.
 
 ---
 
@@ -50,8 +50,8 @@ The collection is indexed for high-performance time-series queries:
 
 ---
 
-## Pending Database Tasks
+## Database Tasks Status
 
-1. **MongoDB Connection**: Configure `MONGODB_URI` environment variable and enable active DB connection.
-2. **Snapshot Ingestion**: Wire automated 5-minute collector to save normalized snapshots into MongoDB.
-3. **Data Retrieval API**: Connect MongoDB snapshot queries directly into `oiCalculationService.ts` for live frontend API endpoints.
+1. **MongoDB Connection**: Completed. Connected to MongoDB Atlas.
+2. **Snapshot Ingestion**: Completed. Automated collector saves normalized snapshots.
+3. **Data Retrieval API**: Completed. API queries MongoDB for snapshots.

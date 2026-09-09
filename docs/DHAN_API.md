@@ -26,12 +26,11 @@ The service layer structure (`backend/src/services/dhanService.ts`) and controll
 
 ## Credentials & Environment Configuration
 
-The integration requires the following environment variables set in `backend/.env`:
+The integration requires the following environment variables set in `backend/.env` (see `backend/.env.example` for a template):
 
 ```env
 DHAN_ACCESS_TOKEN=your_dhan_access_token_here
 DHAN_CLIENT_ID=your_dhan_client_id_here
-DHAN_BASE_URL=https://api.dhan.co
 ```
 
 > **Security Warning**: Never hardcode credentials in source code or commit `.env` files containing live secrets to git repositories.

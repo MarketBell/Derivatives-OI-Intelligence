@@ -16,13 +16,13 @@ The system processes option chain data to provide actionable analytical insights
 Dhan Option Chain API (Pending) ──► Normalization & Validation (Implemented)
                                           │
                                           ▼
-                             MongoDB Persistence (Pending)
+                             MongoDB Persistence (Active)
                                           │
                                           ▼
                            OI Calculation Engine (Implemented)
                                           │
                                           ▼
-                            Express REST API (In Progress)
+                            Express REST API (Completed)
                                           │
                                           ▼
                        React Dashboard UI (Mock Data Active)
@@ -67,4 +67,4 @@ OI-INTELLIGENCE-DASHBOARD/
 - **Testing**: 31 out of 31 backend unit tests passing cleanly (`npm test`).
 - **Pending Implementations**: Real Dhan API live connection/authentication, MongoDB database connection & snapshot persistence, 5-minute automated scheduler, and connecting live backend data to the frontend UI.
 
-For detailed status breakdown, see [docs/DEVELOPMENT_STATUS.md](file:///c:/Users/acer/OneDrive/Desktop/OI-Website/docs/DEVELOPMENT_STATUS.md).
+For detailed status breakdown, see [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md).

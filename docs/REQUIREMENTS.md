@@ -42,7 +42,7 @@
 | **OI Calculation Engine** | **Completed** (`backend/src/services/oiCalculationService.ts`) | 21 unit tests passed |
 | **Backend Foundation & Express API** | **Completed** (`GET /health`, basic option-chain routes) | 10 endpoint & unit tests passed |
 | **Dhan API Integration** | **Structure Prepared** (`dhanService.ts`) | Pending live API credentials & payload mapping |
-| **MongoDB Persistence** | **Model Defined** (`OptionChainSnapshot.ts`) | Pending active MongoDB connection & storage logic |
+| **MongoDB Persistence** | **Active & Connected** | Active MongoDB connection & storage logic |
 | **Automated 5-min Scheduler** | **Pending** | Not started |
 | **Frontend Real Data Wiring** | **Pending** | Currently uses mock data |
 

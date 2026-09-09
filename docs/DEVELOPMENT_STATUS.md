@@ -76,7 +76,7 @@
 ---
 
 ### 7. Database Layer
-- **Status**: **Completed**
-- **Target Database**: MongoDB (via Mongoose)
+- **Status**: **Active & Connected**
+- **Target Database**: MongoDB Atlas (via Mongoose)
 - **Indexing**: Indexed on `{ index: 1, timestamp: 1 }` (unique) and `{ index: 1, dateStr: 1, timestamp: 1 }`.
 - **In-Memory Fallback**: Seamless operation even when MongoDB is offline via `collectorService` ring buffer.
