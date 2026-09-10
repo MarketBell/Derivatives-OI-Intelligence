@@ -284,7 +284,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="login-logo-badge">
             <Shield className="w-6 h-6" />
           </div>
-          <h1 className="login-title">Market Bell</h1>
+          <h1 className="login-title">Billionit Wealth</h1>
           <p className="login-subtitle">
             Derivatives Open Interest Intelligence Terminal
           </p>
@@ -741,7 +741,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         {/* Security & Access Notice */}
         <div className="login-footer-note">
           <p>
-            Role-Based Access Control enforced by Market Bell backend services.
+            Role-Based Access Control enforced by Billionit Wealth backend services.
           </p>
         </div>
       </div>
