@@ -1,6 +1,6 @@
 # OI Intelligence Dashboard
 
-A real-time Option Interest (OI) & OI Change analysis dashboard built for **MarketBell / Derivatives OI Intelligence**.
+A real-time Option Interest (OI) & OI Change analysis dashboard built for **Billionit Wealth / Derivatives OI Intelligence**.
 
 ## Overview
 

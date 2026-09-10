@@ -34,7 +34,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<IndexType>('NIFTY');
   const [logs, setLogs] = useState<Array<{ time: string; message: string; level: 'info' | 'warn' | 'error' }>>([
-    { time: new Date().toLocaleTimeString(), message: 'Market Bell Admin Console initialized. Upstox API active.', level: 'info' },
+    { time: new Date().toLocaleTimeString(), message: 'Billionit Wealth Admin Console initialized. Upstox API active.', level: 'info' },
     { time: new Date().toLocaleTimeString(), message: 'Dynamic ATM + 4 OTM calculations engine operational.', level: 'info' }
   ]);
 
@@ -726,3 +726,4 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     </div>
   );
 };
+

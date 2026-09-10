@@ -1,6 +1,6 @@
 # Comprehensive Admin Authentication Security Audit Report
 
-**Target Platform:** Market Bell / BIW OI Mantra Terminal  
+**Target Platform:** Billionit Wealth / BIW OI Mantra Terminal  
 **Security Issue:** Admin Authentication Passwordless Bypass Fix  
 **Target Account:** `billionitwealth@gmail.com`  
 **Audit Date:** September 8, 2026  
@@ -93,3 +93,4 @@ This allowed any HTTP request targeting `billionitwealth@gmail.com` to obtain an
   1. Set the environment variable `ADMIN_INITIAL_PASSWORD=<new_password>` in `.env` (or environment).
   2. Run `npx ts-node src/utils/seedAdminPassword.ts` (or restart the backend process).
   3. The system securely calculates a new cryptographic salt and PBKDF2 SHA-512 hash and stores only the hash + salt.
+

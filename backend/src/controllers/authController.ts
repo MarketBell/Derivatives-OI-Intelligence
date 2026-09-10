@@ -588,7 +588,7 @@ export const loginWithGoogle = async (
     res.status(200).json({
       success: true,
       status: 'ok',
-      message: 'Successfully authenticated with Market Bell.',
+      message: 'Successfully authenticated with Billionit Wealth.',
       token,
       data: userStatus,
       timestamp: new Date().toISOString()
@@ -721,3 +721,4 @@ export const updatePreferences = async (
     next(err);
   }
 };
+

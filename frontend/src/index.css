@@ -5,45 +5,47 @@
    Deep Blue-Black / Dark Navy Night Mode
    ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
 :root {
   /* Font Family Tokens */
-  --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* DAY MODE (Default: Soft Lavender / White / Blue-Purple) */
-  --bg-app: #F4F0FA;              /* Soft pastel lavender canvas */
-  --bg-surface: #FFFFFF;          /* Pure white card surface */
-  --bg-elevated: #ECE5F8;         /* Soft lavender elevated chip surface */
-  --bg-elevated-hover: #E2D7F3;
-  --bg-input: #FFFFFF;            /* Clean input surface */
+  /* DAY/NIGHT OVERRIDE - Forcing Apple-like Deep Slate Glassmorphism globally */
+  --bg-app: #020617;              
+  --bg-surface: rgba(15, 23, 42, 0.4); 
+  --bg-elevated: rgba(30, 41, 59, 0.5); 
+  --bg-elevated-hover: rgba(51, 65, 85, 0.6);
+  --bg-input: rgba(15, 23, 42, 0.6);   
 
-  --primary-accent: #6366F1;      /* Indigo / Blue-Purple primary */
-  --primary-hover: #4F46E5;       /* Deep blue-purple hover */
-  --primary-soft: #EEF2FF;        /* Soft pastel blue-purple */
-  --primary-glow: rgba(99, 102, 241, 0.15);
+  --primary-accent: #3B82F6;      
+  --primary-hover: #2563EB;       
+  --primary-soft: rgba(59, 130, 246, 0.15);
+  --primary-glow: rgba(59, 130, 246, 0.3);
 
-  --secondary-accent: #8B5CF6;    /* Vibrant violet accent */
-  --secondary-soft: #F5F3FF;      /* Soft violet pill */
+  --secondary-accent: #8B5CF6;    
+  --secondary-soft: rgba(139, 92, 246, 0.15);      
 
-  --text-primary: #0F172A;        /* Slate 900 primary text */
-  --text-muted: #64748B;          /* Slate 500 secondary text */
-  --text-dim: #94A3B8;            /* Slate 400 captions */
+  --text-primary: #F8FAFC;        
+  --text-muted: #94A3B8;          
+  --text-dim: #475569;            
 
-  --border-subtle: #E2E8F0;       /* Crisp 1px subtle divider */
-  --border-card: #E8E2F2;
-  --border-focus: #6366F1;        /* Focus outline */
+  --border-subtle: rgba(255, 255, 255, 0.08);       
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-focus: #3B82F6;        
 
-  --profit: #10B981;              /* Emerald profit green for Call/Delta */
-  --profit-soft: #ECFDF5;
-  --loss: #EF4444;                /* Rose loss red for Put/Delta */
-  --loss-soft: #FEF2F2;
-  --warning-gold: #F59E0B;        /* Gold ATM indicator */
-  --warning-soft: #FEF3C7;
+  --profit: #22C55E;              
+  --profit-soft: rgba(34, 197, 94, 0.15);
+  --loss: #EF4444;                
+  --loss-soft: rgba(239, 68, 68, 0.15);
+  --warning-gold: #F59E0B;        
+  --warning-soft: rgba(245, 158, 11, 0.15);
 
   /* Radius Tokens */
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-lg: 24px;
   --radius-full: 9999px;
 
   /* Spacing Tokens */
@@ -56,8 +58,8 @@
   --space-32: 32px;
 
   /* Typography Scale Tokens */
-  --text-display: 26px;
-  --text-headline: 20px;
+  --text-display: 28px;
+  --text-headline: 22px;
   --text-title-lg: 18px;
   --text-title-md: 15px;
   --text-body-lg: 14px;
@@ -66,8 +68,8 @@
   --text-label-sm: 11px;
 
   /* Flat Card Styling - Subtle Shadow */
-  --shadow-subtle: 0 4px 20px -2px rgba(99, 102, 241, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 6px 24px -4px rgba(139, 92, 246, 0.07);
+  --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 /* NIGHT MODE (Deep Blue-Black / Dark Navy) */
@@ -2054,9 +2056,13 @@ body {
   align-items: center;
   justify-content: center;
   background-color: var(--bg-app);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
   position: relative;
   overflow: hidden;
   padding: var(--space-20);
+  font-family: var(--font-family);
 }
 
 .login-bg-glow-1 {
@@ -2066,7 +2072,7 @@ body {
   transform: translateX(-50%);
   width: 500px;
   height: 350px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(244, 240, 250, 0) 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(2, 6, 23, 0) 70%);
   pointer-events: none;
 }
 
@@ -2074,15 +2080,23 @@ body {
   width: 100%;
   max-width: 440px;
   background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
-  padding: var(--space-24) var(--space-28);
+  padding: var(--space-32);
   display: flex;
   flex-direction: column;
-  gap: var(--space-20);
+  gap: var(--space-24);
   position: relative;
   z-index: 10;
   box-shadow: var(--shadow-card);
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .login-brand-header {
@@ -2090,47 +2104,49 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .login-logo-badge {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-md);
-  background: var(--primary-soft);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-card);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-accent);
-  margin-bottom: var(--space-4);
+  color: var(--text-primary);
+  margin-bottom: var(--space-8);
+  backdrop-filter: blur(10px);
 }
 
 .login-title {
-  font-size: var(--text-headline);
+  font-size: var(--text-display);
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .login-subtitle {
-  font-size: var(--text-label-sm);
+  font-size: var(--text-body-md);
   color: var(--text-muted);
   max-width: 340px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .auth-tabs-row {
   display: flex;
-  background: var(--bg-elevated);
+  background: rgba(0,0,0,0.2);
   border-radius: var(--radius-md);
   padding: 4px;
   gap: 4px;
+  border: 1px solid var(--border-subtle);
 }
 
 .auth-tab-btn {
   flex: 1;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: none;
   background: transparent;
@@ -2138,26 +2154,26 @@ body {
   font-size: var(--text-body-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-tab-btn.active {
-  background: var(--bg-surface);
-  color: var(--primary-accent);
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
   font-weight: 700;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-16);
 }
 
 .login-input-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .login-input-label-row {
@@ -2170,6 +2186,8 @@ body {
   font-size: var(--text-label-sm);
   font-weight: 600;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .forgot-password-link {
@@ -2178,59 +2196,60 @@ body {
   text-decoration: none;
   cursor: pointer;
   font-weight: 600;
+  transition: opacity 0.2s ease;
 }
 
 .forgot-password-link:hover {
-  text-decoration: underline;
+  opacity: 0.8;
 }
 
 .login-input-field {
   width: 100%;
-  height: 44px;
-  background: var(--bg-input);
+  height: 48px;
+  background: rgba(0,0,0,0.15);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 0 var(--space-12);
+  padding: 0 var(--space-16);
   font-size: var(--text-body-md);
   color: var(--text-primary);
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-family);
 }
 
 .login-input-field:focus {
-  border-color: var(--primary-accent);
-  box-shadow: 0 0 0 2px var(--primary-soft);
+  background: rgba(0,0,0,0.25);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.login-error-alert, .login-info-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: var(--text-body-md);
+  backdrop-filter: blur(10px);
 }
 
 .login-error-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-8);
-  background: var(--loss-soft);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
-  padding: 10px;
-  color: var(--loss);
-  font-size: var(--text-label-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
 }
 
 .login-info-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-8);
-  background: var(--primary-soft);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: var(--radius-md);
-  padding: 10px;
-  color: var(--primary-accent);
-  font-size: var(--text-label-sm);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93C5FD;
 }
 
 .login-submit-btn {
-  height: 46px;
+  height: 50px;
   width: 100%;
-  background: var(--primary-accent);
-  color: #FFFFFF;
+  background: var(--text-primary);
+  color: var(--bg-app);
   border: none;
   border-radius: var(--radius-md);
   font-size: var(--text-body-md);
@@ -2240,18 +2259,19 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-top: 4px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 8px;
 }
 
 .login-submit-btn:hover:not(:disabled) {
-  background: var(--primary-hover);
-  box-shadow: 0 4px 14px var(--primary-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255,255,255,0.15);
 }
 
 .login-submit-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .pending-box {
@@ -2259,32 +2279,32 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--space-12);
-  padding: var(--space-16) var(--space-8);
+  gap: var(--space-16);
+  padding: var(--space-20) var(--space-8);
 }
 
 .pending-badge-icon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--warning-soft);
+  background: rgba(245, 158, 11, 0.1);
   color: var(--warning-gold);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .pending-title {
-  font-size: var(--text-title-lg);
+  font-size: var(--text-headline);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .pending-desc {
-  font-size: var(--text-label-sm);
+  font-size: var(--text-body-md);
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .login-footer-note {
@@ -2292,9 +2312,9 @@ body {
   font-size: 11px;
   color: var(--text-dim);
   border-top: 1px solid var(--border-subtle);
-  padding-top: var(--space-12);
+  padding-top: var(--space-16);
+  margin-top: 8px;
 }
-
 /* ==========================================================================
    RESPONSIVE DESIGN (DESKTOP, LAPTOP, TABLET, MOBILE)
    ========================================================================== */
@@ -2351,3 +2371,4 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
