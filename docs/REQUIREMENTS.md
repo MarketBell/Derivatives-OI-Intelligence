@@ -45,6 +45,8 @@
 | **MongoDB Persistence** | **Active & Connected** | Live MongoDB Atlas connection & storage |
 | **Automated 5-min Scheduler** | **Live** | Collector polling every 5 min during market hours |
 | **Frontend Real Data Wiring** | **Completed** | Dashboard consumes live backend API |
+| **Registration Fee + Payment Proof** | **Live** | ₹499 one-time; Razorpay link + proof upload at sign-up, admin verifies & approves |
+| **API / Site Security Hardening** | **Live** | Security headers, auth rate limiting, proof allowlist, frontend CSP |
 | **Production Deployment** | **Live** | Frontend on Vercel (`oi.billionitwealth.in`), backend on Railway |
 
 ---

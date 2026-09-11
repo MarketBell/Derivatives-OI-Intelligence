@@ -76,6 +76,8 @@ A comprehensive pre-deployment verification was conducted across Website B's fro
 | `ADMIN_EMAIL` | **YES** | `billionitwealth@gmail.com` | Designates the root administrator email. |
 | `ADMIN_INITIAL_PASSWORD` | **YES** | `<StrongAdminPassword>` | Used during database bootstrap or via `seedAdminPassword.ts` to initialize the admin hash & salt. |
 | `ENFORCE_SUBSCRIPTION` | Optional | `true` | When `true`, enforces strict paid/approved subscription checks for non-admin users. |
+| `ENFORCE_REGISTRATION_FEE` | Optional | `true` | When not `false`, sign-up requires a valid ₹499 payment proof upload. |
+| `RAZORPAY_WEBHOOK_SECRET` | Optional (future) | `whsec_...` | Reserved for the planned signed Razorpay webhook that auto-verifies payments. |
 | `GOOGLE_CLIENT_ID` | Optional | `...apps.googleusercontent.com` | Google OAuth client ID for user login. |
 | `GOOGLE_CLIENT_SECRET` | Optional | `GOCSPX-...` | Google OAuth client secret. |
 | `RAZORPAY_STATIC_PAYMENT_LINK`| Optional | `https://rzp.io/l/...` | Static payment link displayed to pending users. |
@@ -84,7 +86,8 @@ A comprehensive pre-deployment verification was conducted across Website B's fro
 
 | Variable Name | Required? | Production Example | Description |
 |---------------|:---------:|-------------------|-------------|
-| `VITE_API_BASE_URL` | Optional | `https://api.your-domain.com` | URL of the deployed backend. If frontend is served from the same domain or behind Nginx reverse proxy, leave empty for relative `/api` calls. |
+| `VITE_API_BASE_URL` | Optional | `https://api.your-domain.com` | URL of the deployed backend (include the `https://` scheme). If frontend is served from the same domain or behind Nginx reverse proxy, leave empty for relative `/api` calls. |
+| `VITE_RAZORPAY_REGISTRATION_LINK` | Optional | `https://rzp.io/rzp/...` | Razorpay payment link for the ₹499 registration fee. Defaults to the built-in link if unset. |
 
 ---
 

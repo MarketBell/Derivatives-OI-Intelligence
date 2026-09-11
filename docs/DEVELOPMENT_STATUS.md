@@ -62,8 +62,23 @@
 - **Features Implemented**:
   - **Root Administrator**: `billionitwealth@gmail.com` granted automatic admin privileges and free dashboard access.
   - **Email & Google OAuth**: Ingests user credentials, generates 30-day JWT Bearer tokens.
-  - **Subscription Protection**: Enforces dashboard access controls based on paid ₹499 monthly subscription or admin free grant.
-  - **Admin Actions**: List users, grant free access, activate paid subscription, revoke user access.
+  - **Registration fee (₹499, one-time)**: Sign-up asks the user to pay the fee via the Razorpay
+    payment link (opens in a new tab) and upload the payment receipt/screenshot (image or PDF) as
+    proof. The account is created as `pending`, the proof is stored in the `PaymentProof` collection,
+    and the admin approval queue shows the proof for verification. Server-side dashboard access stays
+    gated by admin approval, so an unverified account can never reach the dashboard. Configurable via
+    `ENFORCE_REGISTRATION_FEE` (default on) and `VITE_RAZORPAY_REGISTRATION_LINK` (frontend).
+    A signed Razorpay webhook is the planned upgrade to auto-verify payments once API keys are available.
+  - **Subscription Protection**: Enforces dashboard access controls based on admin approval / paid access.
+  - **Admin Actions**: List users, view payment proof, approve pending users, grant free access, activate paid subscription, revoke user access.
+
+### 5a. API & Site Security
+- **Status**: **Hardened**
+- Baseline security response headers (nosniff, frame-deny, referrer-policy, HSTS in production),
+  `x-powered-by` disabled, `trust proxy` for correct client IPs, and rate limiting on the auth
+  endpoints. Payment proofs are content-type allowlisted (PNG/JPG/WEBP/PDF), size-capped (3 MB), and
+  served only to admins. The frontend sets a strict Content-Security-Policy and security headers via
+  `frontend/vercel.json`.
 
 ---
 
