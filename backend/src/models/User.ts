@@ -1,5 +1,13 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { UserRole, AccessType, AccountStatus, ThemePreference } from '../types/auth';
+import { UserRole, AccessType, AccountStatus, ThemePreference, RegistrationPaymentStatus, RegistrationPaymentMethod } from '../types/auth';
+
+export interface IRegistrationPayment {
+  status: RegistrationPaymentStatus;      // none | proof_submitted | verified
+  method?: RegistrationPaymentMethod;     // proof_upload | webhook
+  amount?: number;                        // INR
+  proofUploadedAt?: Date;
+  verifiedAt?: Date;
+}
 
 export interface IUserDocument extends Document {
   email: string;
@@ -12,6 +20,7 @@ export interface IUserDocument extends Document {
   role: UserRole;
   accessType: AccessType;
   status: AccountStatus;
+  registrationPayment?: IRegistrationPayment;
   preferences: {
     theme: ThemePreference;
   };
@@ -68,6 +77,20 @@ const UserSchema = new Schema<IUserDocument>({
     enum: ['pending', 'active', 'revoked'],
     default: 'pending',
     required: true
+  },
+  registrationPayment: {
+    status: {
+      type: String,
+      enum: ['none', 'proof_submitted', 'verified'],
+      default: 'none'
+    },
+    method: {
+      type: String,
+      enum: ['proof_upload', 'webhook']
+    },
+    amount: { type: Number },
+    proofUploadedAt: { type: Date },
+    verifiedAt: { type: Date }
   },
   preferences: {
     theme: {

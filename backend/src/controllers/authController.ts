@@ -8,6 +8,10 @@ import { PasswordUtils } from '../utils/passwordUtils';
 import { isDatabaseConnected } from '../config/database';
 import { User } from '../models/User';
 import { Logger } from '../utils/logger';
+import { validatePaymentProof, sanitizeFilename } from '../utils/paymentProof';
+
+const REGISTRATION_FEE_INR = 499;
+const enforceRegistrationFee = (): boolean => process.env.ENFORCE_REGISTRATION_FEE !== 'false';
 
 /**
  * POST /api/auth/register
@@ -52,6 +56,23 @@ export const register = async (
       return;
     }
 
+    // Registration fee: validate the uploaded payment proof (screenshot / PDF receipt).
+    let proof: { dataUrl: string; contentType: string; size: number } | null = null;
+    if (enforceRegistrationFee()) {
+      const proofResult = validatePaymentProof(req.body.paymentProof);
+      if (!proofResult.ok || !proofResult.proof) {
+        res.status(400).json({
+          success: false,
+          status: 'error',
+          message: proofResult.error || 'A valid payment proof is required to complete registration.',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+      proof = proofResult.proof;
+    }
+    const proofFilename = sanitizeFilename(req.body.paymentProof?.filename);
+
     const lowerEmail = email.toLowerCase().trim();
 
     // Check if user already exists
@@ -78,17 +99,37 @@ export const register = async (
         role: 'user',
         status: 'pending',
         accessType: 'none',
+        registrationPayment: proof
+          ? {
+              status: 'proof_submitted',
+              method: 'proof_upload',
+              amount: REGISTRATION_FEE_INR,
+              proofUploadedAt: new Date()
+            }
+          : { status: 'none' },
         preferences: { theme: 'dark' }
       });
 
       await user.save();
 
-      Logger.info('AuthController', `New user registered: ${lowerEmail} (Status: pending)`);
+      if (proof) {
+        await subscriptionService.savePaymentProof({
+          email: lowerEmail,
+          userId: user._id.toString(),
+          dataUrl: proof.dataUrl,
+          contentType: proof.contentType,
+          filename: proofFilename,
+          size: proof.size,
+          amount: REGISTRATION_FEE_INR
+        });
+      }
+
+      Logger.info('AuthController', `New user registered: ${lowerEmail} (Status: pending, payment proof: ${proof ? 'submitted' : 'none'})`);
 
       res.status(201).json({
         success: true,
         status: 'pending_approval',
-        message: 'Your account has been created successfully. Your dashboard access is pending administrator approval.',
+        message: 'Your account has been created successfully. Your registration payment proof has been submitted and your dashboard access is pending administrator verification and approval.',
         user: {
           id: user._id.toString(),
           email: user.email,
@@ -124,15 +165,35 @@ export const register = async (
         role: 'user' as const,
         status: 'pending' as const,
         accessType: 'none' as const,
-        grantedAt: new Date().toISOString()
+        grantedAt: new Date().toISOString(),
+        registrationPayment: proof
+          ? {
+              status: 'proof_submitted' as const,
+              method: 'proof_upload' as const,
+              amount: REGISTRATION_FEE_INR,
+              proofUploadedAt: new Date().toISOString()
+            }
+          : { status: 'none' as const }
       };
 
       subscriptionService.saveMemoryUser(memUser);
 
+      if (proof) {
+        await subscriptionService.savePaymentProof({
+          email: lowerEmail,
+          userId: memUser.id,
+          dataUrl: proof.dataUrl,
+          contentType: proof.contentType,
+          filename: proofFilename,
+          size: proof.size,
+          amount: REGISTRATION_FEE_INR
+        });
+      }
+
       res.status(201).json({
         success: true,
         status: 'pending_approval',
-        message: 'Your account has been created successfully. Your dashboard access is pending administrator approval.',
+        message: 'Your account has been created successfully. Your registration payment proof has been submitted and your dashboard access is pending administrator verification and approval.',
         user: {
           id: memUser.id,
           email: memUser.email,

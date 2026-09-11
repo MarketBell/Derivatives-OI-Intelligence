@@ -5,7 +5,8 @@ import {
   adminApproveUser,
   adminActivatePaid,
   adminListUsers,
-  adminRevokeAccess
+  adminRevokeAccess,
+  adminGetPaymentProof
 } from '../controllers/subscriptionController';
 import { authenticateJWT, requireAdmin } from '../middleware/authMiddleware';
 
@@ -13,6 +14,7 @@ const router = Router();
 
 router.get('/status', authenticateJWT, getSubscriptionStatus);
 router.get('/users', authenticateJWT, requireAdmin, adminListUsers);
+router.get('/payment-proof/:identifier', authenticateJWT, requireAdmin, adminGetPaymentProof);
 router.post('/admin-grant', authenticateJWT, requireAdmin, adminGrantAccess);
 router.post('/admin-approve', authenticateJWT, requireAdmin, adminApproveUser);
 router.post('/admin-revoke', authenticateJWT, requireAdmin, adminRevokeAccess);

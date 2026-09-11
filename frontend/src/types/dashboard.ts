@@ -90,6 +90,14 @@ export interface FilterState {
   frequency?: '1min' | '3min' | '5min';
 }
 
+export interface RegistrationPaymentMeta {
+  status: 'none' | 'proof_submitted' | 'verified';
+  method?: 'proof_upload' | 'webhook';
+  amount?: number;
+  proofUploadedAt?: string;
+  verifiedAt?: string;
+}
+
 export interface AdminUserItem {
   id: string;
   email: string;
@@ -99,6 +107,7 @@ export interface AdminUserItem {
   status: 'pending' | 'active' | 'revoked' | 'inactive';
   grantedAt?: string;
   expiresAt?: string;
+  registrationPayment?: RegistrationPaymentMeta;
 }
 
 export interface CollectorStatusData {

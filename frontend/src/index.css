@@ -44,6 +44,20 @@ body.light,
   --warning-gold: #D97706;        /* Amber 600 ATM indicator */
   --warning-soft: #FEF3C7;
 
+  /* Billionit brand accents (auth pages) — gold + emerald on warm light */
+  --brand-gold: #E0A81E;
+  --brand-gold-light: #F5C542;
+  --brand-gold-ink: #A16207;      /* AA-contrast gold for text on light */
+  --brand-emerald: #10B981;
+  --brand-navy: #0B1120;
+  --auth-bg: #F7F6F2;             /* warm off-white canvas */
+  --auth-card: rgba(255, 255, 255, 0.82);
+  --auth-input: #FFFFFF;
+  --auth-inset: rgba(15, 23, 42, 0.04);
+  --gold-gradient: linear-gradient(135deg, #F5C542 0%, #E0A81E 100%);
+  --gold-btn-text: #0B1120;
+  --gold-glow: rgba(224, 168, 30, 0.28);
+
   /* Radius Tokens */
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -108,6 +122,20 @@ body.dark,
   --loss-soft: rgba(239, 68, 68, 0.14);
   --warning-gold: #FBBF24;        /* Luminous gold ATM badge */
   --warning-soft: rgba(245, 158, 11, 0.14);
+
+  /* Billionit brand accents (auth pages) — gold + emerald on deep navy */
+  --brand-gold: #F5C542;
+  --brand-gold-light: #FDE68A;
+  --brand-gold-ink: #F5C542;      /* gold already reads on dark */
+  --brand-emerald: #34D399;
+  --brand-navy: #05070E;
+  --auth-bg: #05070E;             /* deep near-black premium base */
+  --auth-card: rgba(17, 24, 39, 0.72);
+  --auth-input: rgba(255, 255, 255, 0.04);
+  --auth-inset: rgba(255, 255, 255, 0.05);
+  --gold-gradient: linear-gradient(135deg, #F5C542 0%, #E0A81E 100%);
+  --gold-btn-text: #0B1120;
+  --gold-glow: rgba(245, 197, 66, 0.22);
 
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.3);
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.4);
@@ -2072,42 +2100,43 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-app);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+  background-color: var(--auth-bg);
+  background-image:
+    radial-gradient(circle at 18% 22%, var(--gold-glow), transparent 42%),
+    radial-gradient(circle at 84% 78%, rgba(16, 185, 129, 0.14), transparent 46%);
   position: relative;
   overflow: hidden;
-  padding: var(--space-20);
+  padding: var(--space-24);
   font-family: var(--font-family);
 }
 
 .login-bg-glow-1 {
   position: absolute;
-  top: -120px;
+  top: -160px;
   left: 50%;
   transform: translateX(-50%);
-  width: 500px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(2, 6, 23, 0) 70%);
+  width: 620px;
+  height: 420px;
+  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
   pointer-events: none;
+  filter: blur(10px);
 }
 
 .login-card-wrapper {
   width: 100%;
-  max-width: 440px;
-  background: var(--bg-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  max-width: 448px;
+  background: var(--auth-card);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
-  padding: var(--space-32);
+  padding: 36px 32px;
   display: flex;
   flex-direction: column;
   gap: var(--space-24);
   position: relative;
   z-index: 10;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -2125,17 +2154,17 @@ body {
 }
 
 .login-logo-badge {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border-card);
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: var(--gold-gradient);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: var(--brand-navy);
   margin-bottom: var(--space-8);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 26px var(--gold-glow), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .login-title {
@@ -2154,7 +2183,7 @@ body {
 
 .auth-tabs-row {
   display: flex;
-  background: rgba(0,0,0,0.2);
+  background: var(--auth-inset);
   border-radius: var(--radius-md);
   padding: 4px;
   gap: 4px;
@@ -2175,10 +2204,10 @@ body {
 }
 
 .auth-tab-btn.active {
-  background: rgba(255,255,255,0.1);
-  color: var(--text-primary);
+  background: var(--bg-surface);
+  color: var(--brand-gold-ink);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-subtle);
 }
 
 .login-form {
@@ -2209,10 +2238,10 @@ body {
 
 .forgot-password-link {
   font-size: 11px;
-  color: var(--primary-accent);
+  color: var(--brand-gold-ink);
   text-decoration: none;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   transition: opacity 0.2s ease;
 }
 
@@ -2223,7 +2252,7 @@ body {
 .login-input-field {
   width: 100%;
   height: 48px;
-  background: rgba(0,0,0,0.15);
+  background: var(--auth-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 0 var(--space-16);
@@ -2234,10 +2263,11 @@ body {
   font-family: var(--font-family);
 }
 
+.login-input-field::placeholder { color: var(--text-dim); }
+
 .login-input-field:focus {
-  background: rgba(0,0,0,0.25);
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px var(--primary-soft);
+  border-color: var(--brand-gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
 }
 
 .login-error-alert, .login-info-alert {
@@ -2247,29 +2277,28 @@ body {
   border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: var(--text-body-md);
-  backdrop-filter: blur(10px);
 }
 
 .login-error-alert {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #FCA5A5;
+  background: var(--loss-soft);
+  border: 1px solid var(--loss);
+  color: var(--loss);
 }
 
 .login-info-alert {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #93C5FD;
+  background: var(--profit-soft);
+  border: 1px solid var(--brand-emerald);
+  color: var(--profit);
 }
 
 .login-submit-btn {
-  height: 50px;
+  height: 52px;
   width: 100%;
-  background: var(--text-primary);
-  color: var(--bg-app);
+  background: var(--gold-gradient);
+  color: var(--gold-btn-text);
   border: none;
   border-radius: var(--radius-md);
-  font-size: var(--text-body-md);
+  font-size: var(--text-body-lg);
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -2278,17 +2307,19 @@ body {
   gap: var(--space-8);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;
+  box-shadow: 0 8px 22px var(--gold-glow);
 }
 
 .login-submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255,255,255,0.15);
+  box-shadow: 0 12px 28px var(--gold-glow);
 }
 
 .login-submit-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .pending-box {
@@ -2304,9 +2335,9 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(245, 158, 11, 0.1);
+  background: var(--warning-soft);
   color: var(--warning-gold);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--warning-gold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2331,6 +2362,336 @@ body {
   border-top: 1px solid var(--border-subtle);
   padding-top: var(--space-16);
   margin-top: 8px;
+}
+
+/* ==========================================================================
+   REGISTRATION FEE + PAYMENT PROOF (Create Account)
+   ========================================================================== */
+.reg-fee-box {
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--auth-inset);
+  padding: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.reg-fee-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.reg-fee-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--gold-gradient);
+  color: var(--brand-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px var(--gold-glow);
+}
+
+.reg-fee-head-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.reg-fee-title {
+  font-size: var(--text-label-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.reg-fee-amount {
+  font-size: var(--text-title-lg);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.reg-fee-desc {
+  font-size: var(--text-body-md);
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.reg-fee-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.reg-pay-btn {
+  height: 46px;
+  width: 100%;
+  border: 1px solid var(--brand-gold);
+  background: transparent;
+  color: var(--brand-gold-ink);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-md);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  transition: all 0.25s ease;
+}
+
+.reg-pay-btn:hover:not(:disabled) {
+  background: var(--gold-gradient);
+  color: var(--gold-btn-text);
+  box-shadow: 0 8px 20px var(--gold-glow);
+}
+
+.reg-fee-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.reg-upload-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-16);
+  border: 1.5px dashed var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--auth-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.reg-upload-drop:hover,
+.reg-upload-drop.is-ready {
+  border-color: var(--brand-gold);
+  color: var(--brand-gold-ink);
+}
+
+.reg-upload-label {
+  font-size: var(--text-body-md);
+  font-weight: 700;
+}
+
+.reg-upload-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.reg-proof-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: 10px 12px;
+  border: 1px solid var(--brand-emerald);
+  border-radius: var(--radius-md);
+  background: var(--profit-soft);
+}
+
+.reg-proof-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border-card);
+}
+
+.reg-proof-pdf {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--loss);
+}
+
+.reg-proof-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.reg-proof-name {
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reg-proof-size {
+  font-size: 11px;
+  color: var(--profit);
+  font-weight: 600;
+}
+
+.reg-proof-remove {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.reg-proof-remove:hover {
+  color: var(--loss);
+  border-color: var(--loss);
+}
+
+/* ==========================================================================
+   ADMIN — PAYMENT PROOF CELL + VIEWER MODAL
+   ========================================================================== */
+.proof-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.proof-fee {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.btn-view-proof {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary-accent);
+  background: var(--primary-soft);
+  color: var(--primary-accent);
+  font-size: var(--text-label-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view-proof:hover:not(:disabled) {
+  background: var(--primary-accent);
+  color: #fff;
+}
+
+.btn-view-proof:disabled { opacity: 0.6; cursor: default; }
+
+.proof-none {
+  font-size: 11px;
+  color: var(--loss);
+  font-weight: 600;
+}
+
+.proof-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(2, 6, 14, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20);
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.proof-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.proof-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.proof-modal-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.proof-modal-title { font-size: var(--text-title-md); font-weight: 700; color: var(--text-primary); }
+.proof-modal-sub {
+  font-size: var(--text-body-md);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.proof-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.proof-modal-close:hover { color: var(--loss); border-color: var(--loss); }
+
+.proof-modal-body {
+  padding: var(--space-16);
+  overflow: auto;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proof-modal-img {
+  max-width: 100%;
+  max-height: 62vh;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-card);
+}
+
+.proof-modal-pdf {
+  width: 100%;
+  height: 62vh;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.proof-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  border-top: 1px solid var(--border-subtle);
 }
 /* ==========================================================================
    RESPONSIVE DESIGN (DESKTOP, LAPTOP, TABLET, MOBILE)

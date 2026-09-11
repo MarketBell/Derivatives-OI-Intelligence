@@ -201,6 +201,52 @@ export const adminApproveUser = async (
 };
 
 /**
+ * GET /api/subscription/payment-proof/:identifier
+ * Fetch a user's uploaded registration payment proof (Admin Only Endpoint).
+ * `identifier` may be the user's email (URL-encoded) or their id.
+ */
+export const adminGetPaymentProof = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const identifier = decodeURIComponent(req.params.identifier || '').trim();
+
+    if (!identifier) {
+      res.status(400).json({
+        success: false,
+        status: 'error',
+        message: 'A user identifier (email or id) is required.',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const proof = await subscriptionService.getPaymentProof(identifier);
+
+    if (!proof) {
+      res.status(404).json({
+        success: false,
+        status: 'not_found',
+        message: 'No payment proof was found for this user.',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      status: 'ok',
+      data: proof,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * POST /api/subscription/admin-revoke
  * Revoke dashboard access from a user (Admin Only Endpoint)
  */

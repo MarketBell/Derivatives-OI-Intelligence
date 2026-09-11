@@ -3,6 +3,13 @@ export type AccessType = 'none' | 'paid' | 'admin_free';
 export type SubscriptionStatus = 'active' | 'expired' | 'inactive';
 export type AccountStatus = 'pending' | 'active' | 'revoked';
 export type ThemePreference = 'dark' | 'light';
+export type RegistrationPaymentStatus = 'none' | 'proof_submitted' | 'verified';
+export type RegistrationPaymentMethod = 'proof_upload' | 'webhook';
+
+export interface PaymentProofInput {
+  dataUrl: string;
+  filename?: string;
+}
 
 export interface UserPreferences {
   theme: ThemePreference;
@@ -63,6 +70,7 @@ export interface RegisterDto {
   name: string;
   email: string;
   password: string;
+  paymentProof?: PaymentProofInput;
 }
 
 export interface LoginDto {

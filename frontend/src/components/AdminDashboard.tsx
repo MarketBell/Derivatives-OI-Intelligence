@@ -14,7 +14,10 @@ import {
   TrendingUp,
   Cpu,
   Layers,
-  Clock
+  Clock,
+  Eye,
+  X,
+  ExternalLink
 } from 'lucide-react';
 import type { CollectorStatusData, AdminUserItem, IndexType } from '../types/dashboard';
 import { API_BASE_URL } from '../config/api';
@@ -34,6 +37,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<IndexType>('NIFTY');
+  const [viewingProof, setViewingProof] = useState<{ email: string; dataUrl: string; contentType: string; filename: string } | null>(null);
+  const [proofLoadingEmail, setProofLoadingEmail] = useState<string | null>(null);
   const [logs, setLogs] = useState<Array<{ time: string; message: string; level: 'info' | 'warn' | 'error' }>>([
     { time: new Date().toLocaleTimeString(), message: 'Billionit Wealth Admin Console initialized. Upstox API active.', level: 'info' },
     { time: new Date().toLocaleTimeString(), message: 'Dynamic ATM + 4 OTM calculations engine operational.', level: 'info' }
@@ -97,6 +102,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => 
     }, 10000);
     return () => clearInterval(interval);
   }, [fetchCollectorStatus, fetchUsers]);
+
+  const handleViewProof = async (email: string) => {
+    try {
+      setProofLoadingEmail(email);
+      const token = getEffectiveToken();
+      const res = await fetch(
+        `${API_BASE_URL}/api/subscription/payment-proof/${encodeURIComponent(email)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      const json = await res.json();
+      if (res.ok && json.success && json.data) {
+        setViewingProof({
+          email,
+          dataUrl: json.data.dataUrl,
+          contentType: json.data.contentType,
+          filename: json.data.filename
+        });
+      } else {
+        setActionMessage({ type: 'error', text: json.message || 'No payment proof found for this user.' });
+      }
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err.message });
+    } finally {
+      setProofLoadingEmail(null);
+    }
+  };
+
+  const openProofInNewTab = () => {
+    if (!viewingProof) return;
+    try {
+      const [meta, b64] = viewingProof.dataUrl.split(',');
+      const contentType = meta.match(/data:([^;]+)/)?.[1] || viewingProof.contentType;
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      const blob = new Blob([arr], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleApproveUser = async (email: string) => {
     try {
@@ -342,17 +390,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => 
                   <th>Email</th>
                   <th>Name</th>
                   <th>Status</th>
+                  <th>Registration Payment</th>
                   <th>Registered At</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pendingUsers.map((u) => (
+                {pendingUsers.map((u) => {
+                  const rp = u.registrationPayment;
+                  const hasProof = !!rp && rp.status !== 'none';
+                  return (
                   <tr key={u.id || u.email}>
                     <td className="user-email-cell">{u.email}</td>
                     <td>{u.name || '-'}</td>
                     <td>
                       <span className="status-pill pill-pending">PENDING</span>
+                    </td>
+                    <td>
+                      {hasProof ? (
+                        <div className="proof-cell">
+                          <span className="proof-fee">₹{rp?.amount || 499} · proof</span>
+                          <button
+                            type="button"
+                            className="btn-view-proof"
+                            onClick={() => handleViewProof(u.email)}
+                            disabled={proofLoadingEmail === u.email}
+                            title="View uploaded payment proof"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            {proofLoadingEmail === u.email ? 'Loading…' : 'View Proof'}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="proof-none">No proof uploaded</span>
+                      )}
                     </td>
                     <td>{u.grantedAt ? new Date(u.grantedAt).toLocaleDateString() : 'Recent'}</td>
                     <td>
@@ -367,7 +438,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => 
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -729,6 +801,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => 
           )}
         </div>
       </div>
+
+      {/* Payment Proof Viewer Modal */}
+      {viewingProof && (
+        <div className="proof-modal-overlay" onClick={() => setViewingProof(null)}>
+          <div className="proof-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="proof-modal-head">
+              <div className="proof-modal-titles">
+                <h4 className="proof-modal-title">Registration Payment Proof</h4>
+                <span className="proof-modal-sub">{viewingProof.email} · {viewingProof.filename}</span>
+              </div>
+              <button
+                type="button"
+                className="proof-modal-close"
+                onClick={() => setViewingProof(null)}
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="proof-modal-body">
+              {viewingProof.contentType.startsWith('image/') ? (
+                <img src={viewingProof.dataUrl} alt="Payment proof" className="proof-modal-img" />
+              ) : (
+                <iframe src={viewingProof.dataUrl} title="Payment proof PDF" className="proof-modal-pdf" />
+              )}
+            </div>
+
+            <div className="proof-modal-foot">
+              <button type="button" className="btn-admin-action" onClick={openProofInNewTab}>
+                <ExternalLink className="w-4 h-4 mr-1" /> Open full size
+              </button>
+              <button
+                type="button"
+                className="btn-approve"
+                onClick={() => {
+                  const email = viewingProof.email;
+                  setViewingProof(null);
+                  handleApproveUser(email);
+                }}
+                disabled={isLoading}
+                title="Verify payment and approve dashboard access"
+              >
+                <UserCheck className="w-3.5 h-3.5 mr-1" /> Verify &amp; Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

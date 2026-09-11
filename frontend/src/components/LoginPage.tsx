@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
-import { Shield, Lock, AlertCircle, ArrowRight, User, CheckCircle2, Clock, KeyRound } from 'lucide-react';
+import { Shield, Lock, AlertCircle, ArrowRight, User, CheckCircle2, Clock, KeyRound, CreditCard, Upload, FileText, ExternalLink, X } from 'lucide-react';
 import type { UserProfile } from '../types/dashboard';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, REGISTRATION_PAYMENT_LINK, REGISTRATION_FEE_INR } from '../config/api';
+
+const ALLOWED_PROOF_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf'];
+const MAX_PROOF_BYTES = 3 * 1024 * 1024;
+
+interface ProofState {
+  dataUrl: string;
+  filename: string;
+  contentType: string;
+  size: number;
+}
 
 interface LoginPageProps {
   onLoginSuccess: (user: UserProfile, token: string, redirectTo: string) => void;
@@ -25,6 +35,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [forgotStep, setForgotStep] = useState<'request' | 'verify'>('request');
 
+  // Registration payment
+  const [paymentOpened, setPaymentOpened] = useState(false);
+  const [proof, setProof] = useState<ProofState | null>(null);
+
   const resetMessages = () => {
     setErrorMessage(null);
     setInfoMessage(null);
@@ -36,6 +50,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setPassword('');
     setConfirmPassword('');
     setVerificationCode('');
+    setProof(null);
+    setPaymentOpened(false);
+  };
+
+  const handlePayNow = () => {
+    setPaymentOpened(true);
+    window.open(REGISTRATION_PAYMENT_LINK, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleProofSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    resetMessages();
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file after removal
+    if (!file) return;
+
+    if (!ALLOWED_PROOF_TYPES.includes(file.type)) {
+      setErrorMessage('Payment proof must be a PNG, JPG, WEBP image or a PDF file.');
+      return;
+    }
+    if (file.size > MAX_PROOF_BYTES) {
+      setErrorMessage('Payment proof is too large. Please upload a file under 3 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => setErrorMessage('Could not read the selected file. Please try again.');
+    reader.onload = () => {
+      setProof({
+        dataUrl: String(reader.result),
+        filename: file.name,
+        contentType: file.type,
+        size: file.size
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   const switchView = (newView: AuthView) => {
@@ -117,12 +166,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    if (!proof) {
+      setErrorMessage(`Please pay the ₹${REGISTRATION_FEE_INR} registration fee and upload your payment proof to create your account.`);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: cleanEmail, password })
+        body: JSON.stringify({
+          name: name.trim(),
+          email: cleanEmail,
+          password,
+          paymentProof: {
+            dataUrl: proof.dataUrl,
+            filename: proof.filename
+          }
+        })
       });
 
       const data = await res.json();
@@ -298,13 +360,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
             <h2 className="pending-title">Account Created</h2>
             <p className="pending-desc">
-              Your account has been created successfully. Your dashboard access is currently <strong>pending administrator approval</strong>.
+              Your account has been created and your payment proof submitted. Your dashboard access is currently <strong>pending administrator verification &amp; approval</strong>.
             </p>
             <div className="status-pill pill-pending" style={{ padding: '4px 12px', fontSize: '12px' }}>
               Status: PENDING APPROVAL
             </div>
             <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '8px' }}>
-              Once approved by administrator (billionitwealth@gmail.com), you will be able to sign in immediately.
+              Once the administrator (billionitwealth@gmail.com) verifies your payment and approves your account, you will be able to sign in immediately.
             </p>
             <button
               type="button"
@@ -506,6 +568,75 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
+              {/* Registration fee: pay via Razorpay + upload proof */}
+              <div className="reg-fee-box">
+                <div className="reg-fee-head">
+                  <div className="reg-fee-badge">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <div className="reg-fee-head-text">
+                    <span className="reg-fee-title">One-time registration fee</span>
+                    <span className="reg-fee-amount">₹{REGISTRATION_FEE_INR}</span>
+                  </div>
+                </div>
+                <p className="reg-fee-desc">
+                  Pay the registration fee, then upload your payment receipt / screenshot as proof.
+                  Your account is created for administrator verification and approval.
+                </p>
+
+                <div className="reg-fee-steps">
+                  <button type="button" className="reg-pay-btn" onClick={handlePayNow} disabled={isLoading}>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay ₹{REGISTRATION_FEE_INR} Registration Fee</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                  {paymentOpened && !proof && (
+                    <p className="reg-fee-hint">
+                      After paying, download the Razorpay receipt / screenshot and upload it below.
+                    </p>
+                  )}
+
+                  {!proof ? (
+                    <label className={`reg-upload-drop ${paymentOpened ? 'is-ready' : ''}`}>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,application/pdf"
+                        onChange={handleProofSelected}
+                        disabled={isLoading}
+                        hidden
+                      />
+                      <Upload className="w-5 h-5" />
+                      <span className="reg-upload-label">Upload payment proof</span>
+                      <span className="reg-upload-sub">PNG, JPG, WEBP or PDF · max 3 MB</span>
+                    </label>
+                  ) : (
+                    <div className="reg-proof-preview">
+                      {proof.contentType.startsWith('image/') ? (
+                        <img src={proof.dataUrl} alt="Payment proof" className="reg-proof-thumb" />
+                      ) : (
+                        <div className="reg-proof-thumb reg-proof-pdf">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="reg-proof-meta">
+                        <span className="reg-proof-name">{proof.filename}</span>
+                        <span className="reg-proof-size">{(proof.size / 1024).toFixed(0)} KB · attached</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="reg-proof-remove"
+                        onClick={() => setProof(null)}
+                        disabled={isLoading}
+                        title="Remove file"
+                        aria-label="Remove payment proof"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {errorMessage && (
                 <div className="login-error-alert" role="alert">
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -513,7 +644,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
               )}
 
-              <button type="submit" disabled={isLoading} className="login-submit-btn">
+              <button type="submit" disabled={isLoading || !proof} className="login-submit-btn">
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full anim-spin" />
@@ -522,7 +653,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <User className="w-4 h-4" />
-                    <span>Create Free Account</span>
+                    <span>Create Account</span>
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 )}

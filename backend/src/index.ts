@@ -5,6 +5,7 @@ import optionChainRoutes from './routes/optionChainRoutes';
 import authRoutes from './routes/authRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import { errorHandler } from './utils/errorHandler';
+import { securityHeaders, rateLimit } from './middleware/securityMiddleware';
 import { upstoxConfig, isUpstoxConfigured } from './config/upstoxConfig';
 import { connectDatabase, isDatabaseConnected } from './config/database';
 import { Logger } from './utils/logger';
@@ -13,6 +14,11 @@ dotenv.config();
 
 const app = express();
 const PORT = upstoxConfig.port;
+
+// Hide the Express fingerprint and trust the hosting proxy (Railway) so req.ip
+// reflects the real client for rate limiting.
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 // CORS Configuration with environment override & development fallback
 const allowedOrigins = process.env.CORS_ORIGIN
@@ -47,6 +53,7 @@ app.use(
   })
 );
 
+app.use(securityHeaders);
 app.use(express.json({ limit: '5mb' }));
 
 // Health Check Endpoint
@@ -61,7 +68,13 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
+// Throttle auth endpoints (login/register/reset) to blunt brute-force and abuse.
+const authRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  message: 'Too many authentication attempts. Please wait a minute and try again.'
+});
+app.use('/api/auth', authRateLimiter, authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/option-chain', optionChainRoutes);
 app.use('/api/option-contract', optionChainRoutes);

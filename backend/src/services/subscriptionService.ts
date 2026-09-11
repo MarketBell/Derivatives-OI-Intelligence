@@ -2,10 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { User, IUserDocument } from '../models/User';
 import { Subscription, ISubscriptionDocument } from '../models/Subscription';
-import { UserStatusResponse, PlatformSupportDetails, ISubscriptionDetails, IUserProfile, AccountStatus } from '../types/auth';
+import { PaymentProof } from '../models/PaymentProof';
+import { UserStatusResponse, PlatformSupportDetails, ISubscriptionDetails, IUserProfile, AccountStatus, RegistrationPaymentStatus } from '../types/auth';
 import { upstoxConfig } from '../config/upstoxConfig';
 import { isDatabaseConnected } from '../config/database';
 import { Logger } from '../utils/logger';
+
+export interface RegistrationPaymentMeta {
+  status: RegistrationPaymentStatus;
+  method?: 'proof_upload' | 'webhook';
+  amount?: number;
+  proofUploadedAt?: string;
+  verifiedAt?: string;
+}
+
+export interface StoredPaymentProof {
+  dataUrl: string;
+  contentType: string;
+  filename: string;
+  size: number;
+  amount: number;
+  uploadedAt: string;
+}
 
 // In-memory fallback user store when MongoDB is not connected
 export interface MemoryUser {
@@ -20,6 +38,7 @@ export interface MemoryUser {
   grantedAt?: string;
   expiresAt?: string;
   phone?: string;
+  registrationPayment?: RegistrationPaymentMeta;
 }
 
 const defaultMemoryUsers: MemoryUser[] = [
@@ -70,6 +89,9 @@ export class SubscriptionService {
     }
     return users;
   })();
+
+  // Payment proofs for DB-less dev mode (binaries are never written to the fallback JSON).
+  private memoryProofs: Map<string, StoredPaymentProof> = new Map();
 
   private saveFallbackStore(): void {
     try {
@@ -242,6 +264,7 @@ export class SubscriptionService {
         const users = await User.find({}).sort({ createdAt: -1 }).lean();
         return users.map((u) => {
           const status: AccountStatus = u.status || (u.role === 'admin' || u.accessType !== 'none' ? 'active' : 'pending');
+          const rp = (u as any).registrationPayment;
           return {
             id: u._id.toString(),
             email: u.email,
@@ -249,7 +272,16 @@ export class SubscriptionService {
             role: u.role,
             accessType: u.accessType,
             status,
-            grantedAt: u.createdAt ? new Date(u.createdAt).toISOString() : undefined
+            grantedAt: u.createdAt ? new Date(u.createdAt).toISOString() : undefined,
+            registrationPayment: rp
+              ? {
+                  status: rp.status,
+                  method: rp.method,
+                  amount: rp.amount,
+                  proofUploadedAt: rp.proofUploadedAt ? new Date(rp.proofUploadedAt).toISOString() : undefined,
+                  verifiedAt: rp.verifiedAt ? new Date(rp.verifiedAt).toISOString() : undefined
+                }
+              : undefined
           };
         });
       } catch (err: any) {
@@ -274,6 +306,10 @@ export class SubscriptionService {
 
       user.status = 'active';
       user.accessType = 'admin_free';
+      if (user.registrationPayment && user.registrationPayment.status === 'proof_submitted') {
+        user.registrationPayment.status = 'verified';
+        user.registrationPayment.verifiedAt = new Date();
+      }
       await user.save();
 
       await Subscription.findOneAndUpdate(
@@ -299,6 +335,11 @@ export class SubscriptionService {
       if (existing) {
         existing.status = 'active';
         existing.accessType = 'admin_free';
+        if (existing.registrationPayment && existing.registrationPayment.status === 'proof_submitted') {
+          existing.registrationPayment.status = 'verified';
+          existing.registrationPayment.verifiedAt = new Date().toISOString();
+        }
+        this.saveFallbackStore();
       } else {
         this.memoryUsers.push({
           id: `mem-${Date.now()}`,
@@ -502,6 +543,110 @@ export class SubscriptionService {
       this.memoryUsers.push(user);
     }
     this.saveFallbackStore();
+  }
+
+  /**
+   * Persist a registration-fee payment proof (one per email; a re-upload replaces it).
+   * In DB mode the binary lives in the PaymentProof collection; without a DB it is
+   * held in memory only (dev fallback) and never written to the fallback JSON.
+   */
+  public async savePaymentProof(params: {
+    email: string;
+    userId?: string;
+    dataUrl: string;
+    contentType: string;
+    filename: string;
+    size: number;
+    amount?: number;
+  }): Promise<void> {
+    const lowerEmail = params.email.toLowerCase().trim();
+    const amount = params.amount ?? 499;
+
+    if (isDatabaseConnected()) {
+      await PaymentProof.findOneAndUpdate(
+        { email: lowerEmail },
+        {
+          email: lowerEmail,
+          userId: params.userId && /^[0-9a-fA-F]{24}$/.test(params.userId) ? params.userId : undefined,
+          dataUrl: params.dataUrl,
+          contentType: params.contentType,
+          filename: params.filename,
+          size: params.size,
+          amount
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    } else {
+      this.memoryProofs.set(lowerEmail, {
+        dataUrl: params.dataUrl,
+        contentType: params.contentType,
+        filename: params.filename,
+        size: params.size,
+        amount,
+        uploadedAt: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Fetch a stored payment proof by email or user id (admin-only use).
+   */
+  public async getPaymentProof(identifier: string): Promise<StoredPaymentProof | null> {
+    const lower = identifier.toLowerCase().trim();
+
+    if (isDatabaseConnected()) {
+      let proof = null;
+      if (/^[0-9a-fA-F]{24}$/.test(identifier)) {
+        proof = await PaymentProof.findOne({ userId: identifier });
+      }
+      if (!proof) {
+        proof = await PaymentProof.findOne({ email: lower });
+      }
+      if (!proof) return null;
+      return {
+        dataUrl: proof.dataUrl,
+        contentType: proof.contentType,
+        filename: proof.filename,
+        size: proof.size,
+        amount: proof.amount,
+        uploadedAt: (proof.createdAt || new Date()).toISOString()
+      };
+    }
+
+    return this.memoryProofs.get(lower) || null;
+  }
+
+  /**
+   * Record that a user's registration payment has been submitted (proof uploaded).
+   */
+  public async markRegistrationProofSubmitted(email: string, amount = 499): Promise<void> {
+    const lowerEmail = email.toLowerCase().trim();
+    const meta: RegistrationPaymentMeta = {
+      status: 'proof_submitted',
+      method: 'proof_upload',
+      amount,
+      proofUploadedAt: new Date().toISOString()
+    };
+
+    if (isDatabaseConnected()) {
+      await User.findOneAndUpdate(
+        { email: lowerEmail },
+        {
+          registrationPayment: {
+            status: 'proof_submitted',
+            method: 'proof_upload',
+            amount,
+            proofUploadedAt: new Date()
+          }
+        }
+      );
+    } else {
+      const memUser = this.findMemoryUser(lowerEmail);
+      if (memUser) {
+        memUser.registrationPayment = meta;
+        this.saveMemoryUser(memUser);
+      }
+    }
   }
 }
 
