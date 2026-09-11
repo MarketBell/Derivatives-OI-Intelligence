@@ -10,10 +10,10 @@
    - **BANK NIFTY**
    - **SENSEX**
 
-3. **Data Collection & Scheduling** *(Pending Integration)*:
-   - **Data Source**: Dhan Option Chain API (POST `/v2/optionchain`)
-   - **Data Collection Window**: 9:15 AM to 3:40 PM (Trading Hours)
-   - **Data Frequency**: Every 5 minutes (Automated scheduler pending)
+3. **Data Collection & Scheduling** *(Live)*:
+   - **Data Source**: Broker option chain — Upstox API v2 (live) with Dhan API v2 configured as an alternate provider.
+   - **Data Collection Window**: 9:15 AM to 3:40 PM IST (Trading Hours), with a manual off-hours override for testing.
+   - **Data Frequency**: Every 5 minutes (automated collector running in production).
 
 4. **Metrics & Indicators**:
    - **CE OI** (Call Option Open Interest)
@@ -37,14 +37,15 @@
 
 | Requirement | Implementation Status | Verification |
 | :--- | :--- | :--- |
-| **Frontend UI Layout & Components** | **Completed** (Uses Mock Data) | Visually verified |
+| **Frontend UI Layout & Components** | **Completed** | Deployed on Vercel, wired to live backend data |
 | **Option Chain Types & Schemas** | **Completed** (`backend/src/types/optionChain.ts`) | TypeScript build passed |
-| **OI Calculation Engine** | **Completed** (`backend/src/services/oiCalculationService.ts`) | 21 unit tests passed |
-| **Backend Foundation & Express API** | **Completed** (`GET /health`, basic option-chain routes) | 10 endpoint & unit tests passed |
-| **Dhan API Integration** | **Structure Prepared** (`dhanService.ts`) | Pending live API credentials & payload mapping |
-| **MongoDB Persistence** | **Active & Connected** | Active MongoDB connection & storage logic |
-| **Automated 5-min Scheduler** | **Pending** | Not started |
-| **Frontend Real Data Wiring** | **Pending** | Currently uses mock data |
+| **OI Calculation Engine** | **Completed** (`backend/src/services/oiCalculationService.ts`) | Verified by unit tests |
+| **Backend Foundation & Express API** | **Completed** (`GET /health`, option-chain, auth & subscription routes) | 81/81 tests passing |
+| **Broker API Integration** | **Live** (Upstox v2) / **Configured** (Dhan v2) | Live option-chain collection running |
+| **MongoDB Persistence** | **Active & Connected** | Live MongoDB Atlas connection & storage |
+| **Automated 5-min Scheduler** | **Live** | Collector polling every 5 min during market hours |
+| **Frontend Real Data Wiring** | **Completed** | Dashboard consumes live backend API |
+| **Production Deployment** | **Live** | Frontend on Vercel (`oi.billionitwealth.in`), backend on Railway |
 
 ---
 

@@ -1,32 +1,52 @@
-# React + TypeScript + Vite
+# OI Intelligence — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The dashboard UI for **Billionit Wealth / Derivatives OI Intelligence**. A Vite + React +
+TypeScript single-page app styled with Tailwind CSS (dark glassmorphism theme).
 
-Currently, two official plugins are available:
+- **Live:** https://oi.billionitwealth.in (Vercel)
+- **Backend API:** consumed via `VITE_API_BASE_URL`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+| | |
+|---|---|
+| Framework | React 18 + TypeScript |
+| Bundler | Vite |
+| Styling | Tailwind CSS (dark glassmorphism, `Plus Jakarta Sans`) |
+| Hosting | Vercel (SPA) |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting started
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Other scripts:
+
+```bash
+npm run build    # tsc -b && vite build → dist/
+npm run preview  # serve the production build locally
+```
+
+## Configuration
+
+Set the backend URL for the environment (include the full `https://` scheme — a missing
+scheme makes the app call itself and fail):
+
+```
+# frontend/.env (or Vercel project env)
+VITE_API_BASE_URL=https://<your-backend-host>
+```
+
+`src/config/api.ts` reads `VITE_API_BASE_URL` first and falls back to relative `/api`
+paths when it is empty (e.g. when the frontend and backend share a domain).
+
+## Deploying on Vercel
+
+1. Import the repository, set the project root to `frontend/`.
+2. Add `VITE_API_BASE_URL` pointing at the deployed backend.
+3. `vercel.json` already rewrites all routes to `index.html` for SPA routing.
+4. Attach the custom domain `oi.billionitwealth.in`.
+
+Every push to `main` deploys automatically.

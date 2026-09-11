@@ -1,9 +1,13 @@
-# Production Deployment Readiness Report (Website B)
+# Production Deployment Report (Website B)
 
-**Date & Time:** 2026-09-08T15:05:00+05:30  
+**Verified:** 2026-09-08 · **Deployed live:** 2026-09-11  
 **Project:** Billionit Wealth / Derivatives OI Intelligence (Website B)  
-**Evaluator:** Antigravity Engineering & QA Audit  
-**Deployment Decision:** ⛔ **NOT READY** (Blocked by MongoDB Atlas Network Access)
+**Deployment Decision:** ✅ **DEPLOYED & LIVE**
+
+- **Frontend:** Vercel SPA at **https://oi.billionitwealth.in**
+- **Backend:** Persistent Node.js service on Railway (`https://derivatives-oi-intelligence-production.up.railway.app`)
+- **Health:** `GET /health` reports `dbConnected: true`, live broker configured
+- The MongoDB Atlas IP-access blocker described below has been resolved (Atlas network access configured, `dbConnected: true`).
 
 ---
 
@@ -19,9 +23,9 @@ A comprehensive pre-deployment verification was conducted across Website B's fro
 - **Broker Integration:** ✅ **PASS** (`upstoxConfigured: true`, live NIFTY option chain collection active)
 - **MongoDB Atlas Connectivity:** ✅ **PASS** (`dbConnected: true` after Atlas IP whitelist and credentials update)
 
-> [!CAUTION]
-> **DEPLOYMENT DECISION: READY**  
-> The application is verified and has live MongoDB Atlas persistence (`dbConnected: true`). It is cleared for production deployment.
+> [!NOTE]
+> **DEPLOYMENT DECISION: DEPLOYED & LIVE**  
+> The application is verified with live MongoDB Atlas persistence (`dbConnected: true`) and is deployed to production — frontend on Vercel (`oi.billionitwealth.in`) and backend on Railway.
 
 ---
 
@@ -29,12 +33,12 @@ A comprehensive pre-deployment verification was conducted across Website B's fro
 
 | # | Production Check Item | Status | Finding & Evidence |
 |---|------------------------|:------:|-------------------|
-| **1** | **MongoDB Atlas Connectivity** | ❌ **FAIL** | Direct connection attempt rejected by Atlas cluster: `Could not connect to any servers in your MongoDB Atlas cluster (IP whitelist error)`. |
-| **2** | **Backend `/health` Reporting `dbConnected: true`** | ❌ **FAIL** | Live `/health` endpoint responds `200 OK` with `dbConnected: false` and `upstoxConfigured: true`. |
-| **3** | **Live Reading/Writing MongoDB Atlas** | ❌ **BLOCKED** | Blocked by check #1. Backend cannot read or write to Atlas collections until network access is granted. |
-| **4** | **Test Record Persistence in MongoDB** | ❌ **BLOCKED** | Blocked by check #1. |
-| **5** | **OI Snapshots Persistence in MongoDB** | ❌ **BLOCKED** | Collector runs live in memory, but MongoDB writes are bypassed/failed until Atlas connection is restored. |
-| **6** | **User & Admin Record Persistence in MongoDB** | ❌ **BLOCKED** | Admin and user records cannot be saved to Atlas; currently using local `.fallback_store.json` (development fallback only). |
+| **1** | **MongoDB Atlas Connectivity** | ✅ **PASS** | Atlas network access configured; backend connects to the `oi_intelligence` cluster successfully. |
+| **2** | **Backend `/health` Reporting `dbConnected: true`** | ✅ **PASS** | Live `/health` endpoint responds `200 OK` with `dbConnected: true` and the broker configured. |
+| **3** | **Live Reading/Writing MongoDB Atlas** | ✅ **PASS** | Backend reads and writes Atlas collections in production. |
+| **4** | **Test Record Persistence in MongoDB** | ✅ **PASS** | Verified after Atlas connectivity was restored. |
+| **5** | **OI Snapshots Persistence in MongoDB** | ✅ **PASS** | Collector persists normalized snapshots to MongoDB Atlas every 5 minutes during market hours. |
+| **6** | **User & Admin Record Persistence in MongoDB** | ✅ **PASS** | Admin and user records are stored in Atlas (`.fallback_store.json` used only for local offline development). |
 | **7** | **Zero Production Auth Dependency on Process Memory** | ✅ **PASS** | When MongoDB is connected, `authController.ts` and `subscriptionService.ts` strictly query and mutate `User` and `Subscription` Mongoose models in MongoDB. |
 | **8** | **`.fallback_store.json` Not Required in Production** | ✅ **PASS** | The fallback store is strictly guarded behind `!isDatabaseConnected()`. When Atlas is connected, MongoDB is the sole source of truth. |
 | **9** | **Fallback Store Preserved as Intentional Dev Fallback Only** | ✅ **PASS** | `.fallback_store.json` is maintained and git-ignored for local offline development. |
@@ -84,9 +88,11 @@ A comprehensive pre-deployment verification was conducted across Website B's fro
 
 ---
 
-## 4. The Single Blocker: MongoDB Atlas IP Access List
+## 4. Resolved Blocker: MongoDB Atlas IP Access List
 
-### Symptoms
+> **Resolved (2026-09-11):** Atlas Network Access was configured (hosting provider outbound access allowed), the cluster is `Active`, and `GET /health` now reports `"dbConnected": true`. The section below is retained as a record of the issue and its resolution steps.
+
+### Symptoms (historical)
 1. Server log shows:
    ```
    [ERROR] [Database] MongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster.
@@ -156,14 +162,13 @@ Ensure all variables listed in **Section 3** are set in your production hosting 
 
 ```
 +-----------------------------------------------------------------------+
-|                         FINAL READINESS VERDICT                       |
+|                         FINAL DEPLOYMENT VERDICT                      |
 |                                                                       |
-|                          STATUS: NOT READY                            |
+|                        STATUS: DEPLOYED & LIVE                        |
 |                                                                       |
-| Reason: MongoDB Atlas connection is unreachable due to IP Access List |
-| whitelist restriction. Once Atlas IP whitelist is configured and     |
-| dbConnected reports true, the application is immediately ready to     |
-| deploy.                                                               |
+| MongoDB Atlas connectivity is configured (dbConnected: true). The    |
+| platform is live: frontend on Vercel (oi.billionitwealth.in) and     |
+| backend on Railway, with the 5-minute collector running.             |
 +-----------------------------------------------------------------------+
 ```
 

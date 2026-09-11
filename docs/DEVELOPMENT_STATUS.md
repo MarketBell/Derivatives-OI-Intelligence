@@ -1,7 +1,7 @@
 # OI Intelligence Dashboard - Current Development Status
 
-**Document Last Updated**: September 2026  
-**Overall System Status**: Backend Infrastructure Fully Completed (Phase 3 Completed)
+**Document Last Updated**: 11 September 2026  
+**Overall System Status**: Live in Production — deployed, database connected, live collection running
 
 ---
 
@@ -70,7 +70,7 @@
 ### 6. Automated Unit & Integration Testing
 - **Status**: **100% Passing**
 - **Test Framework**: Jest + ts-jest + Supertest
-- **Results**: **55 out of 55 unit and integration tests passing cleanly**.
+- **Results**: **81 out of 81 unit and integration tests passing cleanly**.
   - Tests covering calculation engine, strike interval rules, market hours guard, normalization, Zod runtime validation, rate limiters, auth middleware, and REST API endpoints.
 
 ---
@@ -80,3 +80,12 @@
 - **Target Database**: MongoDB Atlas (via Mongoose)
 - **Indexing**: Indexed on `{ index: 1, timestamp: 1 }` (unique) and `{ index: 1, dateStr: 1, timestamp: 1 }`.
 - **In-Memory Fallback**: Seamless operation even when MongoDB is offline via `collectorService` ring buffer.
+
+---
+
+### 8. Deployment (Live in Production)
+- **Status**: **Deployed & Live**
+- **Frontend**: Vite/React SPA deployed on **Vercel**, served at the custom domain **https://oi.billionitwealth.in**. SPA routing configured via `frontend/vercel.json`; API base URL supplied through `VITE_API_BASE_URL`.
+- **Backend**: Deployed on **Railway** as a persistent Node.js service (a long-lived process is required so the 5-minute collector's scheduler keeps running — it cannot run on a serverless function).
+- **Health**: `GET /health` reports `dbConnected: true` and the live broker as configured.
+- **Website link**: The Billionit Wealth marketing site links to this dashboard from its "OI Intelligence" section and top navigation.

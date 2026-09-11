@@ -2,6 +2,8 @@
 
 A real-time Option Interest (OI) & OI Change analysis dashboard built for **Billionit Wealth / Derivatives OI Intelligence**.
 
+> **Status:** Live in production. Frontend at **https://oi.billionitwealth.in** (Vercel), backend on Railway, MongoDB Atlas connected, live broker option-chain collection running every 5 minutes.
+
 ## Overview
 
 The system processes option chain data to provide actionable analytical insights across key equity indices:
@@ -13,19 +15,19 @@ The system processes option chain data to provide actionable analytical insights
 ## System Architecture Flow
 
 ```text
-Dhan Option Chain API (Pending) ──► Normalization & Validation (Implemented)
+Broker Option Chain API (Upstox live / Dhan configured) ──► Normalization & Validation (Live)
                                           │
                                           ▼
-                             MongoDB Persistence (Active)
+                             MongoDB Atlas Persistence (Live)
                                           │
                                           ▼
-                           OI Calculation Engine (Implemented)
+                           OI Calculation Engine (Live)
                                           │
                                           ▼
-                            Express REST API (Completed)
+                            Express REST API (Live)
                                           │
                                           ▼
-                       React Dashboard UI (Mock Data Active)
+                       React Dashboard UI (Live data, deployed)
 ```
 
 ## Project Structure
@@ -61,10 +63,13 @@ OI-INTELLIGENCE-DASHBOARD/
 
 ## Current Development Status Summary
 
-- **Frontend UI**: Completed React/TypeScript dashboard UI (Dark theme, Index filter, Date/Time range filters, OI Summary Cards, OI & OI Change tables, positive/negative indicators). Currently powered by mock data. Located in `frontend/`.
-- **Backend Foundation**: Node.js + Express + TypeScript structure fully operational (`GET /health`, `GET /api/option-chain`, centralized error handling). Located in `backend/`. `npm run build:backend` compiles cleanly with 0 errors.
-- **OI Calculation Engine**: Fully implemented in `backend/src/services/oiCalculationService.ts` and independently verified with unit tests (Full-day, 1-hour, 15-minute, custom duration, percentage change, and zero/edge-case handling).
-- **Testing**: 31 out of 31 backend unit tests passing cleanly (`npm test`).
-- **Pending Implementations**: Real Dhan API live connection/authentication, MongoDB database connection & snapshot persistence, 5-minute automated scheduler, and connecting live backend data to the frontend UI.
+- **Live deployment**: Frontend served at **https://oi.billionitwealth.in** (Vercel SPA); backend runs as a persistent Node.js service on Railway (the 5-minute collector needs a long-lived process, so it cannot be serverless).
+- **Frontend UI**: React/TypeScript dashboard (dark glassmorphism theme, index filter, date/time-range filters, OI summary cards, OI & OI-change tables, positive/negative indicators) wired to live backend data. Located in `frontend/`.
+- **Backend Foundation**: Node.js + Express + TypeScript fully operational (`GET /health`, `GET /api/option-chain`, auth + subscription routes, centralized error handling). Located in `backend/`. `npm run build:backend` compiles cleanly with 0 errors.
+- **Data Collection**: Live broker option-chain polling every 5 minutes during Indian market hours (Upstox API v2 live; Dhan API v2 configured), normalized and persisted to MongoDB Atlas.
+- **OI Calculation Engine**: Fully implemented in `backend/src/services/oiCalculationService.ts` and verified with unit tests (full-day, 1-hour, 15-minute, custom duration, percentage change, and zero/edge-case handling).
+- **Database**: MongoDB Atlas connected and persisting snapshots, users, and subscriptions.
+- **Auth & Access**: Email + Google login, JWT, root-admin RBAC, and subscription-gated dashboard access.
+- **Testing**: 81 out of 81 backend unit and integration tests passing cleanly (`npm test`).
 
-For detailed status breakdown, see [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md).
+For a detailed status breakdown, see [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md). For deployment specifics, see [DEPLOYMENT_READINESS.md](DEPLOYMENT_READINESS.md).

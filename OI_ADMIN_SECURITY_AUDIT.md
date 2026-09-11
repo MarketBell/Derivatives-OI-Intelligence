@@ -5,7 +5,7 @@
 **Target Account:** `billionitwealth@gmail.com`  
 **Audit Date:** September 8, 2026  
 **Status:** **PASSED (15/15 Requirements Verified)**  
-**Deployment Status:** NOT DEPLOYED (Local Environment Verified Only)
+**Deployment Status:** DEPLOYED — live at https://oi.billionitwealth.in (Vercel frontend + Railway backend)
 
 ---
 
@@ -82,7 +82,7 @@ This allowed any HTTP request targeting `billionitwealth@gmail.com` to obtain an
 4. **UI Design Preserved:**
    - No UI changes or layout modifications introduced.
 5. **Deployment:**
-   - Deployment was NOT executed per instructions.
+   - Deployed to production — frontend on Vercel (`oi.billionitwealth.in`), backend on Railway.
 
 ---
 
