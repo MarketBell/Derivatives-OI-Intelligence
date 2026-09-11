@@ -209,7 +209,7 @@ export function App() {
       fetchBackendData();
     }, 10000);
     return () => clearInterval(timer);
-  }, [currentUser, authToken, filters.selectedIndex, filters.selectedDate, filters.frequency]);
+  }, [currentUser, authToken, fetchBackendData]);
 
   // Route security guard: prevent non-admins from viewing Admin Portal
   useEffect(() => {
@@ -389,6 +389,7 @@ export function App() {
       <main className="main-content">
         {activeTab === 'admin' && currentUser.role === 'admin' ? (
           <AdminDashboard
+            authToken={authToken}
             isDarkMode={isDarkMode}
             onRefreshData={() => fetchBackendData(filters, true)}
           />

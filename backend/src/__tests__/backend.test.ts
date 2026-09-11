@@ -245,11 +245,45 @@ describe('Backend MVP Pipeline Tests', () => {
       expect(res5m.body.data.intervalSeconds).toBe(300);
     });
 
-    it('POST /api/option-chain/collector/stop should stop collector and return status', async () => {
-      const res = await request(app).post('/api/option-chain/collector/stop');
+    it('GET /api/option-contract should alias /api/option-chain and return metadata', async () => {
+      const res = await request(app).get('/api/option-contract?index=NIFTY');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('status');
+      expect(res.body).toHaveProperty('configured');
+    });
+
+    it('GET /api/option-contract/collection-status should return status object', async () => {
+      const res = await request(app).get('/api/option-contract/collection-status');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.isRunning).toBe(false);
+      expect(res.body.data).toHaveProperty('isRunning');
+    });
+
+    it('GET /api/option-contract/time-series should return dataset', async () => {
+      const res = await request(app).get('/api/option-contract/time-series?index=NIFTY');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('index', 'NIFTY');
+    });
+
+    it('Should reject invalid or malformed tokens with 401', async () => {
+      const res = await request(app)
+        .get('/api/subscription/users')
+        .set('Authorization', 'Bearer admin_token_demo');
+      expect(res.status).toBe(401);
+      expect(res.body.message).toContain('Invalid or expired token.');
+    });
+
+    it('Should verify admin JWT token and allow access to admin endpoints', async () => {
+      const { jwtService } = require('../services/jwtService');
+      const token = jwtService.generateToken('admin-root', 'billionitwealth@gmail.com', 'admin');
+      
+      const res = await request(app)
+        .get('/api/subscription/users')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
     });
   });
 

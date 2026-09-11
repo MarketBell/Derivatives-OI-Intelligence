@@ -84,7 +84,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setPassword('');
         setErrorMessage(data.message || 'Authentication failed. Please check your credentials.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Network error: Unable to connect to backend server. Please verify the server is running.');
     } finally {
       setIsLoading(false);
@@ -133,7 +133,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       } else {
         setErrorMessage(data.message || 'Registration failed.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Network error: Unable to connect to backend server.');
     } finally {
       setIsLoading(false);
@@ -179,7 +179,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       } else {
         setErrorMessage(data.message || 'Account setup verification failed.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Network error: Unable to connect to backend server.');
     } finally {
       setIsLoading(false);
@@ -217,7 +217,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       } else {
         setErrorMessage(data.message || 'Unable to process password reset request.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Network error: Unable to connect to backend server.');
     } finally {
       setIsLoading(false);
@@ -267,7 +267,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       } else {
         setErrorMessage(data.message || 'Password reset failed.');
       }
-    } catch (err: any) {
+    } catch {
       setErrorMessage('Network error: Unable to connect to backend server.');
     } finally {
       setIsLoading(false);

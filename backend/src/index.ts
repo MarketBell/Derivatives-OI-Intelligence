@@ -59,6 +59,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/option-chain', optionChainRoutes);
+app.use('/api/option-contract', optionChainRoutes);
 
 // Centralized Error Handling Middleware
 app.use(errorHandler);

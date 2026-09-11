@@ -20,11 +20,12 @@ import type { CollectorStatusData, AdminUserItem, IndexType } from '../types/das
 import { API_BASE_URL } from '../config/api';
 
 interface AdminDashboardProps {
+  authToken?: string | null;
   isDarkMode?: boolean;
   onRefreshData?: () => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ authToken }) => {
   const [collectorStatus, setCollectorStatus] = useState<CollectorStatusData | null>(null);
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [newEmail, setNewEmail] = useState('');
@@ -45,9 +46,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     ]);
   };
 
+  const getEffectiveToken = useCallback(() => {
+    return authToken || localStorage.getItem('oi_token') || '';
+  }, [authToken]);
+
   const fetchCollectorStatus = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/option-chain/collection-status`);
+      const token = getEffectiveToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`${API_BASE_URL}/api/option-chain/collection-status`, { headers });
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -57,16 +67,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     } catch (err: any) {
       console.error('Failed to fetch collector status:', err);
     }
-  }, []);
+  }, [getEffectiveToken]);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
-      const res = await fetch(`${API_BASE_URL}/api/subscription/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const token = getEffectiveToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`${API_BASE_URL}/api/subscription/users`, { headers });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -76,7 +86,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     } catch (err: any) {
       console.error('Failed to fetch users:', err);
     }
-  }, []);
+  }, [getEffectiveToken]);
 
   useEffect(() => {
     fetchCollectorStatus();
@@ -91,12 +101,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleApproveUser = async (email: string) => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       const res = await fetch(`${API_BASE_URL}/api/subscription/admin-approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ email })
       });
@@ -119,12 +129,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleStartCollector = async (intervalMinutes = 3) => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           interval: intervalMinutes,
@@ -152,12 +162,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleStopCollector = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       const res = await fetch(`${API_BASE_URL}/api/option-chain/collector/stop`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const json = await res.json();
       if (res.ok && json.success) {
@@ -178,12 +186,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     setIsLoading(true);
     try {
       addLog(`Triggering immediate live fetch for ${selectedIndex} from Upstox API...`, 'info');
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       const res = await fetch(`${API_BASE_URL}/api/option-chain/fetch?index=${selectedIndex}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const json = await res.json();
       if (res.ok && json.success) {
@@ -207,13 +213,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     if (!newEmail.trim()) return;
 
     try {
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       setIsLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/subscription/admin-grant`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           email: newEmail.trim(),
@@ -246,13 +252,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     }
 
     try {
-      const token = localStorage.getItem('oi_token') || 'admin_token_demo';
+      const token = getEffectiveToken();
       setIsLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/subscription/admin-revoke`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ email })
       });
