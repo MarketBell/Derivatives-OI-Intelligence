@@ -48,21 +48,21 @@ export const SummaryCardContainer: React.FC<SummaryCardProps> = ({ summary }) =>
         </div>
       </div>
 
-      {/* Card 2: Open Interest (ATM + 4 OTM) */}
+      {/* Card 2: Open Interest */}
       <div className="summary-card">
         <div className="card-top-row">
-          <span className="card-title">Live Open Interest (ATM + 4 OTM)</span>
+          <span className="card-title">Live Open Interest</span>
           <div className="card-icon-pill icon-indigo">
             <Target className="w-4 h-4 text-indigo-500" />
           </div>
         </div>
         <div className="card-metrics-row">
           <div className="metric-group">
-            <span className="metric-label">Total Call OI (5 Strikes)</span>
+            <span className="metric-label">Total Call OI</span>
             <span className="metric-value val-green">{formatNumber(summary.endCallOI)}</span>
           </div>
           <div className="metric-group">
-            <span className="metric-label">Total Put OI (5 Strikes)</span>
+            <span className="metric-label">Total Put OI</span>
             <span className="metric-value val-red">{formatNumber(summary.endPutOI)}</span>
           </div>
         </div>
@@ -88,10 +88,10 @@ export const SummaryCardContainer: React.FC<SummaryCardProps> = ({ summary }) =>
         </div>
       </div>
 
-      {/* Card 4: OI Change vs Previous Day Close */}
+      {/* Card 4: OI Change */}
       <div className="summary-card">
         <div className="card-top-row">
-          <span className="card-title">OI Change (vs Prev Trading Day Close)</span>
+          <span className="card-title">OI Change</span>
           <div className={`card-icon-pill ${isCallChangePos ? 'icon-green' : 'icon-red'}`}>
             {isCallChangePos ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
           </div>

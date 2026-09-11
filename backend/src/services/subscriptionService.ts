@@ -19,6 +19,7 @@ export interface MemoryUser {
   salt?: string;
   grantedAt?: string;
   expiresAt?: string;
+  phone?: string;
 }
 
 const defaultMemoryUsers: MemoryUser[] = [
@@ -86,6 +87,21 @@ export class SubscriptionService {
         }
       }
     } catch {}
+  }
+
+  /**
+   * Update memory user profile details and persist to fallback store
+   */
+  public updateMemoryUser(userId: string, data: { name?: string; phone?: string }): void {
+    this.syncFallbackStore();
+    const user = this.memoryUsers.find(
+      (u) => u.id === userId || u.email.toLowerCase() === userId.toLowerCase()
+    );
+    if (user) {
+      if (data.name) user.name = data.name;
+      if (data.phone !== undefined) user.phone = data.phone;
+      this.saveFallbackStore();
+    }
   }
 
   /**

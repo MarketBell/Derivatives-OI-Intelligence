@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, RefreshCw, Calendar, Target, Zap } from 'lucide-react';
+import { Activity, RefreshCw, Calendar } from 'lucide-react';
 
 interface DashboardHeaderProps {
   lastUpdated: string;
@@ -10,19 +10,10 @@ interface DashboardHeaderProps {
   onRefresh: () => void;
 }
 
-const formatNumber = (num?: number): string => {
-  if (num === undefined || num === null || isNaN(num)) return '-';
-  return new Intl.NumberFormat('en-IN', {
-    maximumFractionDigits: 2,
-  }).format(num);
-};
-
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   lastUpdated,
   selectedIndex = 'NIFTY',
   currentExpiry,
-  spotPrice,
-  atmStrike,
   onRefresh,
 }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -47,7 +38,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <span className="index-tag-badge">{selectedIndex}</span>
           </div>
           <p className="header-subtitle">
-            Real-Time Derivatives Open Interest Intelligence (ATM + 4 OTM Analysis)
+            Real-Time Derivatives Open Interest Intelligence
           </p>
         </div>
       </div>
@@ -58,22 +49,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <Calendar className="w-3.5 h-3.5 text-emerald-400 mr-1" />
             <span className="badge-lbl">Expiry:</span>
             <span className="badge-val font-semibold">{currentExpiry}</span>
-          </div>
-        )}
-
-        {spotPrice !== undefined && spotPrice > 0 && (
-          <div className="header-badge-item">
-            <Zap className="w-3.5 h-3.5 text-amber-400 mr-1" />
-            <span className="badge-lbl">Spot:</span>
-            <span className="badge-val font-bold">₹{formatNumber(spotPrice)}</span>
-          </div>
-        )}
-
-        {atmStrike !== undefined && atmStrike > 0 && (
-          <div className="header-badge-item atm-header-pill">
-            <Target className="w-3.5 h-3.5 text-amber-400 mr-1" />
-            <span className="badge-lbl">ATM Strike:</span>
-            <span className="badge-val font-bold">₹{formatNumber(atmStrike)}</span>
           </div>
         )}
       </div>

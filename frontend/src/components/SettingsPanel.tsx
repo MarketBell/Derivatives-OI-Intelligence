@@ -1,23 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Bell,
   Sliders,
   CheckCircle2,
+  AlertCircle,
   Save,
   RotateCcw,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 import type { UserProfile } from '../types/dashboard';
+import { API_BASE_URL } from '../config/api';
 
 interface SettingsPanelProps {
   currentUser?: UserProfile | null;
+  authToken?: string | null;
+  onUpdateUser?: (updated: UserProfile) => void;
 }
 
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => {
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({
+  currentUser,
+  authToken,
+  onUpdateUser
+}) => {
   const [name, setName] = useState(currentUser?.name || 'Authorized Trader');
   const [email, setEmail] = useState(currentUser?.email || 'trader@gmail.com');
-  const [phone, setPhone] = useState(currentUser?.phone || '+91 98765 43210');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
 
   const [defaultIndex, setDefaultIndex] = useState('NIFTY');
   const [defaultFreq, setDefaultFreq] = useState('3min');
@@ -25,14 +34,61 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
   const [oiAlerts, setOiAlerts] = useState(true);
   const [divergenceAlerts, setDivergenceAlerts] = useState(true);
 
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.name) setName(currentUser.name);
+      if (currentUser.email) setEmail(currentUser.email);
+      setPhone(currentUser.phone || '');
+    }
+  }, [currentUser]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 2500);
+    setIsSaving(true);
+    setErrorMessage(null);
+
+    try {
+      if (authToken) {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ name, phone })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to update preferences on server.');
+        }
+
+        const updatedProfile: UserProfile = data.user || {
+          ...(currentUser || { id: 'usr', email, role: 'user', accessType: 'none' }),
+          name,
+          phone
+        };
+
+        if (onUpdateUser) {
+          onUpdateUser(updatedProfile);
+        }
+      } else if (currentUser && onUpdateUser) {
+        onUpdateUser({ ...currentUser, name, phone });
+      }
+
+      setIsSaved(true);
+      setTimeout(() => {
+        setIsSaved(false);
+      }, 3000);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error saving preferences');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -55,6 +111,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
           <div className="settings-toast">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>Preferences saved successfully!</span>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="settings-toast" style={{ background: 'var(--loss-soft)', color: 'var(--loss)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span>{errorMessage}</span>
           </div>
         )}
       </div>
@@ -101,9 +164,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
             <div className="form-field">
               <label className="form-label">Contact Phone</label>
               <input
-                type="text"
+                type="tel"
                 className="form-input"
+                placeholder="Enter contact phone number"
                 value={phone}
+                disabled={isSaving}
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
@@ -182,17 +247,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ currentUser }) => 
 
         {/* Form Action Controls */}
         <div className="settings-actions-bar">
-          <button type="submit" className="btn-primary">
-            <Save className="w-4 h-4" />
-            <span>Save Preferences</span>
+          <button type="submit" className="btn-primary" disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>{isSaving ? 'Saving...' : 'Save Preferences'}</span>
           </button>
           <button
             type="button"
             className="btn-secondary"
+            disabled={isSaving}
             onClick={() => {
               setName(currentUser?.name || 'Authorized Trader');
               setEmail(currentUser?.email || 'trader@gmail.com');
-              setPhone('+91 98765 43210');
+              setPhone(currentUser?.phone || '');
               setDefaultIndex('NIFTY');
               setDefaultFreq('3min');
             }}

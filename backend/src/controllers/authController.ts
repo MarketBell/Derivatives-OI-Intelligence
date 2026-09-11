@@ -321,7 +321,8 @@ export const emailLogin = async (
         name: userDoc.name || lowerEmail.split('@')[0],
         role: userDoc.role || 'user',
         status: userDoc.status || 'active',
-        accessType: userDoc.accessType || 'paid'
+        accessType: userDoc.accessType || 'paid',
+        phone: userDoc.phone || ''
       },
       redirectTo: userDoc.role === 'admin' ? '/admin' : '/dashboard',
       message: 'Sign in successful. Access granted.',
@@ -427,7 +428,8 @@ export const completeLegacySetup = async (
         name: userDoc.name,
         role,
         status: userDoc.status,
-        accessType: userDoc.accessType
+        accessType: userDoc.accessType,
+        phone: userDoc.phone || ''
       },
       redirectTo: role === 'admin' ? '/admin' : '/dashboard',
       message: 'Account setup complete. You are now signed in.',
@@ -629,7 +631,8 @@ export const getCurrentUser = async (
         name: req.user.name,
         role: req.user.role,
         status: req.user.status || 'active',
-        accessType: req.user.accessType
+        accessType: req.user.accessType,
+        phone: req.user.phone || ''
       },
       data: userStatus,
       timestamp: new Date().toISOString()
@@ -665,6 +668,9 @@ export const updateProfile = async (
 
     if (typeof (req.user as any).save === 'function') {
       await (req.user as any).save();
+    } else {
+      const userId = (req.user as any)._id ? (req.user as any)._id.toString() : (req.user as any).id;
+      subscriptionService.updateMemoryUser(userId, { name, phone });
     }
     const userStatus = await subscriptionService.getUserStatusResponse(req.user);
 
@@ -672,6 +678,15 @@ export const updateProfile = async (
       success: true,
       status: 'ok',
       message: 'Profile updated successfully.',
+      user: {
+        id: (req.user as any)._id ? (req.user as any)._id.toString() : (req.user as any).id,
+        email: req.user.email,
+        name: req.user.name,
+        role: req.user.role,
+        status: req.user.status || 'active',
+        accessType: req.user.accessType,
+        phone: req.user.phone || ''
+      },
       data: userStatus,
       timestamp: new Date().toISOString()
     });

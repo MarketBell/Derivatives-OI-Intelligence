@@ -1,46 +1,48 @@
 /* ==========================================================================
-   MARKET BELL — OI INTELLIGENCE DASHBOARD
-   App A Visual Design Language Implementation
-   Soft Lavender / White / Blue-Purple Day Mode
-   Deep Blue-Black / Dark Navy Night Mode
+   BILLIONIT WEALTH — OI INTELLIGENCE DASHBOARD
+   Design System Tokens: Day Mode (Light) & Night Mode (Dark)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
-:root {
+:root,
+[data-theme="light"],
+html.light,
+body.light,
+.light {
   /* Font Family Tokens */
-  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* DAY/NIGHT OVERRIDE - Forcing Apple-like Deep Slate Glassmorphism globally */
-  --bg-app: #020617;              
-  --bg-surface: rgba(15, 23, 42, 0.4); 
-  --bg-elevated: rgba(30, 41, 59, 0.5); 
-  --bg-elevated-hover: rgba(51, 65, 85, 0.6);
-  --bg-input: rgba(15, 23, 42, 0.6);   
+  /* DAY MODE: Clean Crisp Slate 50 / Pure White Light Theme */
+  --bg-app: #F8FAFC;              /* Clean crisp light slate canvas */
+  --bg-surface: #FFFFFF;          /* Pure white card and sidebar surface */
+  --bg-elevated: #F1F5F9;         /* Slate 100 elevated chips / table header */
+  --bg-elevated-hover: #E2E8F0;   /* Slate 200 hover */
+  --bg-input: #FFFFFF;            /* Clean input surface */
 
-  --primary-accent: #3B82F6;      
-  --primary-hover: #2563EB;       
-  --primary-soft: rgba(59, 130, 246, 0.15);
-  --primary-glow: rgba(59, 130, 246, 0.3);
+  --primary-accent: #4F46E5;      /* Indigo-600 primary */
+  --primary-hover: #4338CA;       /* Indigo-700 hover */
+  --primary-soft: #EEF2FF;        /* Soft indigo pill */
+  --primary-glow: rgba(79, 70, 229, 0.12);
 
-  --secondary-accent: #8B5CF6;    
-  --secondary-soft: rgba(139, 92, 246, 0.15);      
+  --secondary-accent: #7C3AED;    /* Violet accent */
+  --secondary-soft: #F5F3FF;      /* Soft violet pill */
 
-  --text-primary: #F8FAFC;        
-  --text-muted: #94A3B8;          
-  --text-dim: #475569;            
+  --text-primary: #0F172A;        /* Slate 900 high-contrast primary text */
+  --text-muted: #475569;          /* Slate 600 secondary text */
+  --text-dim: #64748B;            /* Slate 500 captions */
 
-  --border-subtle: rgba(255, 255, 255, 0.08);       
-  --border-card: rgba(255, 255, 255, 0.12);
-  --border-focus: #3B82F6;        
+  --border-subtle: #E2E8F0;       /* Crisp 1px subtle divider */
+  --border-card: #E2E8F0;         /* Card border */
+  --border-focus: #4F46E5;        /* Focus outline */
 
-  --profit: #22C55E;              
-  --profit-soft: rgba(34, 197, 94, 0.15);
-  --loss: #EF4444;                
-  --loss-soft: rgba(239, 68, 68, 0.15);
-  --warning-gold: #F59E0B;        
-  --warning-soft: rgba(245, 158, 11, 0.15);
+  --profit: #059669;              /* Deep emerald profit green for Call/Delta */
+  --profit-soft: #ECFDF5;
+  --loss: #DC2626;                /* Deep rose loss red for Put/Delta */
+  --loss-soft: #FEF2F2;
+  --warning-gold: #D97706;        /* Amber 600 ATM indicator */
+  --warning-soft: #FEF3C7;
 
   /* Radius Tokens */
   --radius-sm: 8px;
@@ -67,12 +69,16 @@
   --text-label-lg: 13px;
   --text-label-sm: 11px;
 
-  /* Flat Card Styling - Subtle Shadow */
-  --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  /* Professional Light Card Shadow */
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* NIGHT MODE (Deep Blue-Black / Dark Navy) */
+:root.dark,
+[data-theme="dark"],
+html.dark,
+body.dark,
 .dark {
   --bg-app: #090D16;              /* Deep blue-black canvas */
   --bg-surface: #111827;          /* Dark navy card surface */
@@ -105,6 +111,17 @@
 
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.3);
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Base Resets & Global Styles */
+html {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+#root {
+  min-height: 100vh;
+  background-color: var(--bg-app);
 }
 
 /* Base Resets & Global Styles */

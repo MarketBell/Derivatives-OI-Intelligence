@@ -4,7 +4,7 @@ interface LegendProps {
   startTime?: string;
 }
 
-export const Legend: React.FC<LegendProps> = ({ startTime = '09:15 AM' }) => {
+export const Legend: React.FC<LegendProps> = () => {
   return (
     <footer className="dashboard-legend">
       <div className="legend-items">
@@ -16,12 +16,6 @@ export const Legend: React.FC<LegendProps> = ({ startTime = '09:15 AM' }) => {
           <span className="legend-box box-red" />
           <span className="legend-label">Red: Decrease in Open Interest (Unwinding)</span>
         </div>
-      </div>
-
-      <div className="legend-note">
-        <span>
-          <strong>Baseline Rule:</strong> OI Change = Live OI − Previous Trading Day Closing OI. ({startTime} marks market session open boundary).
-        </span>
       </div>
     </footer>
   );

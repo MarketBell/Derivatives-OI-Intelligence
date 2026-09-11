@@ -25,7 +25,12 @@ app.use(
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
       if (allowedOrigins) {
-        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        if (
+          allowedOrigins.includes(origin) ||
+          allowedOrigins.includes('*') ||
+          origin.startsWith('http://localhost') ||
+          origin.startsWith('http://127.0.0.1')
+        ) {
           return callback(null, true);
         }
         return callback(new Error(`CORS policy does not allow access from origin: ${origin}`));

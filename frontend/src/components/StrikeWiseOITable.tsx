@@ -33,7 +33,7 @@ export const StrikeWiseOITable: React.FC<StrikeWiseOITableProps> = ({
             <Target className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="table-title">STRIKE-WISE OPTION CHAIN (ATM + 4 OTM)</h3>
+            <h3 className="table-title">STRIKE-WISE OPTION CHAIN</h3>
             <p className="table-subtitle">
               Dynamic Spot: <strong>₹{formatNumber(spotPrice)}</strong> | ATM Strike:{' '}
               <span className="atm-pill">₹{formatNumber(atmStrike)}</span>

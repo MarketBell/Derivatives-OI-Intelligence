@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Activity className="w-5 h-5" />
             </div>
             <div className="brand-text">
-              <span className="brand-title">MARKET<span>BELL</span></span>
+              <span className="brand-title">Billionit <span>Wealth</span></span>
               <span className="brand-subtitle">OI INTELLIGENCE</span>
             </div>
           </div>
@@ -79,13 +79,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="button"
             className="theme-toggle-btn"
             onClick={onToggleTheme}
-            title={`Switch to ${isDarkMode ? 'Day' : 'Night'} Mode`}
+            title={isDarkMode ? 'Switch to Day Mode (Light)' : 'Switch to Night Mode (Dark)'}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {isDarkMode ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
-              <span>{isDarkMode ? 'Night Mode' : 'Day Mode'}</span>
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+              <span>{isDarkMode ? 'Day Mode' : 'Night Mode'}</span>
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Toggle</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>Switch</span>
           </button>
         )}
 
