@@ -44,19 +44,13 @@ body.light,
   --warning-gold: #D97706;        /* Amber 600 ATM indicator */
   --warning-soft: #FEF3C7;
 
-  /* Billionit brand accents (auth pages) — gold + emerald on warm light */
-  --brand-gold: #E0A81E;
-  --brand-gold-light: #F5C542;
-  --brand-gold-ink: #A16207;      /* AA-contrast gold for text on light */
+  /* Billionit brand accents (auth pages) — aligned with clean Billionit design system */
   --brand-emerald: #10B981;
   --brand-navy: #0B1120;
-  --auth-bg: #F7F6F2;             /* warm off-white canvas */
-  --auth-card: rgba(255, 255, 255, 0.82);
+  --auth-bg: var(--bg-app);
+  --auth-card: rgba(255, 255, 255, 0.94);
   --auth-input: #FFFFFF;
-  --auth-inset: rgba(15, 23, 42, 0.04);
-  --gold-gradient: linear-gradient(135deg, #F5C542 0%, #E0A81E 100%);
-  --gold-btn-text: #0B1120;
-  --gold-glow: rgba(224, 168, 30, 0.28);
+  --auth-inset: #F1F5F9;
 
   /* Radius Tokens */
   --radius-sm: 8px;
@@ -123,19 +117,13 @@ body.dark,
   --warning-gold: #FBBF24;        /* Luminous gold ATM badge */
   --warning-soft: rgba(245, 158, 11, 0.14);
 
-  /* Billionit brand accents (auth pages) — gold + emerald on deep navy */
-  --brand-gold: #F5C542;
-  --brand-gold-light: #FDE68A;
-  --brand-gold-ink: #F5C542;      /* gold already reads on dark */
+  /* Billionit brand accents (auth pages) — aligned with clean Billionit design system */
   --brand-emerald: #34D399;
   --brand-navy: #05070E;
-  --auth-bg: #05070E;             /* deep near-black premium base */
-  --auth-card: rgba(17, 24, 39, 0.72);
-  --auth-input: rgba(255, 255, 255, 0.04);
-  --auth-inset: rgba(255, 255, 255, 0.05);
-  --gold-gradient: linear-gradient(135deg, #F5C542 0%, #E0A81E 100%);
-  --gold-btn-text: #0B1120;
-  --gold-glow: rgba(245, 197, 66, 0.22);
+  --auth-bg: var(--bg-app);
+  --auth-card: rgba(17, 24, 39, 0.85);
+  --auth-input: #0B0F19;
+  --auth-inset: rgba(255, 255, 255, 0.04);
 
   --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.3);
   --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.4);
@@ -2100,10 +2088,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--auth-bg);
+  background-color: var(--bg-app);
   background-image:
-    radial-gradient(circle at 18% 22%, var(--gold-glow), transparent 42%),
-    radial-gradient(circle at 84% 78%, rgba(16, 185, 129, 0.14), transparent 46%);
+    radial-gradient(circle at 18% 22%, var(--primary-glow), transparent 45%),
+    radial-gradient(circle at 84% 78%, rgba(99, 102, 241, 0.08), transparent 45%);
   position: relative;
   overflow: hidden;
   padding: var(--space-24);
@@ -2112,14 +2100,41 @@ body {
 
 .login-bg-glow-1 {
   position: absolute;
-  top: -160px;
+  top: -140px;
   left: 50%;
   transform: translateX(-50%);
-  width: 620px;
-  height: 420px;
-  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+  width: 600px;
+  height: 380px;
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
   pointer-events: none;
-  filter: blur(10px);
+  filter: blur(20px);
+}
+
+.login-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  font-size: var(--text-label-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-subtle);
+  backdrop-filter: blur(12px);
+}
+
+.login-theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+  transform: translateY(-1px);
 }
 
 .login-card-wrapper {
@@ -2136,7 +2151,7 @@ body {
   gap: var(--space-24);
   position: relative;
   z-index: 10;
-  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-card);
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -2154,17 +2169,18 @@ body {
 }
 
 .login-logo-badge {
-  width: 60px;
-  height: 60px;
-  border-radius: 18px;
-  background: var(--gold-gradient);
-  border: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand-navy);
+  color: var(--primary-accent);
   margin-bottom: var(--space-8);
-  box-shadow: 0 10px 26px var(--gold-glow), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-subtle);
 }
 
 .login-title {
@@ -2205,7 +2221,7 @@ body {
 
 .auth-tab-btn.active {
   background: var(--bg-surface);
-  color: var(--brand-gold-ink);
+  color: var(--text-primary);
   font-weight: 700;
   box-shadow: var(--shadow-subtle);
 }
@@ -2238,10 +2254,10 @@ body {
 
 .forgot-password-link {
   font-size: 11px;
-  color: var(--brand-gold-ink);
+  color: var(--primary-accent);
   text-decoration: none;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
   transition: opacity 0.2s ease;
 }
 
@@ -2266,8 +2282,8 @@ body {
 .login-input-field::placeholder { color: var(--text-dim); }
 
 .login-input-field:focus {
-  border-color: var(--brand-gold);
-  box-shadow: 0 0 0 3px var(--gold-glow);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 .login-error-alert, .login-info-alert {
@@ -2292,13 +2308,13 @@ body {
 }
 
 .login-submit-btn {
-  height: 52px;
+  height: 50px;
   width: 100%;
-  background: var(--gold-gradient);
-  color: var(--gold-btn-text);
+  background: var(--text-primary);
+  color: var(--bg-app);
   border: none;
   border-radius: var(--radius-md);
-  font-size: var(--text-body-lg);
+  font-size: var(--text-body-md);
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -2307,12 +2323,13 @@ body {
   gap: var(--space-8);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;
-  box-shadow: 0 8px 22px var(--gold-glow);
+  box-shadow: var(--shadow-subtle);
 }
 
 .login-submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px var(--gold-glow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0.95;
 }
 
 .login-submit-btn:disabled {
@@ -2387,13 +2404,14 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: var(--gold-gradient);
-  color: var(--brand-navy);
+  background: var(--primary-soft);
+  color: var(--primary-accent);
+  border: 1px solid var(--border-card);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px var(--gold-glow);
+  box-shadow: var(--shadow-subtle);
 }
 
 .reg-fee-head-text {
@@ -2431,9 +2449,9 @@ body {
 .reg-pay-btn {
   height: 46px;
   width: 100%;
-  border: 1px solid var(--brand-gold);
-  background: transparent;
-  color: var(--brand-gold-ink);
+  border: 1px solid var(--primary-accent);
+  background: var(--primary-soft);
+  color: var(--primary-accent);
   border-radius: var(--radius-md);
   font-size: var(--text-body-md);
   font-weight: 700;
@@ -2446,9 +2464,9 @@ body {
 }
 
 .reg-pay-btn:hover:not(:disabled) {
-  background: var(--gold-gradient);
-  color: var(--gold-btn-text);
-  box-shadow: 0 8px 20px var(--gold-glow);
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  box-shadow: 0 6px 20px var(--primary-glow);
 }
 
 .reg-fee-hint {
@@ -2474,8 +2492,8 @@ body {
 
 .reg-upload-drop:hover,
 .reg-upload-drop.is-ready {
-  border-color: var(--brand-gold);
-  color: var(--brand-gold-ink);
+  border-color: var(--border-focus);
+  color: var(--primary-accent);
 }
 
 .reg-upload-label {

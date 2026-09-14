@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Lock, AlertCircle, ArrowRight, User, CheckCircle2, Clock, KeyRound, CreditCard, Upload, FileText, ExternalLink, X } from 'lucide-react';
+import { Shield, Lock, AlertCircle, ArrowRight, User, CheckCircle2, Clock, KeyRound, CreditCard, Upload, FileText, ExternalLink, X, Sun, Moon } from 'lucide-react';
 import type { UserProfile } from '../types/dashboard';
 import { API_BASE_URL, REGISTRATION_PAYMENT_LINK, REGISTRATION_FEE_INR } from '../config/api';
 
@@ -15,11 +15,13 @@ interface ProofState {
 
 interface LoginPageProps {
   onLoginSuccess: (user: UserProfile, token: string, redirectTo: string) => void;
+  isDarkMode?: boolean;
+  onToggleTheme?: () => void;
 }
 
 type AuthView = 'signin' | 'create_account' | 'pending' | 'legacy_setup' | 'forgot_password';
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode, onToggleTheme }) => {
   const [view, setView] = useState<AuthView>('signin');
 
   // Form Fields
@@ -339,6 +341,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   return (
     <div className="login-page-container">
       <div className="login-bg-glow-1" />
+
+      {onToggleTheme && (
+        <button
+          type="button"
+          className="login-theme-toggle"
+          onClick={onToggleTheme}
+          title={isDarkMode ? 'Switch to Day Mode (Light)' : 'Switch to Night Mode (Dark)'}
+          aria-label="Toggle Day/Night mode"
+        >
+          {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+          <span>{isDarkMode ? 'Day Mode' : 'Night Mode'}</span>
+        </button>
+      )}
 
       <div className="login-card-wrapper">
         {/* Brand Header */}

@@ -64,7 +64,8 @@ export function App() {
   });
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('oi_theme') === 'dark';
+    const saved = localStorage.getItem('oi_theme');
+    return saved !== null ? saved === 'dark' : true;
   });
 
   const [dataset, setDataset] = useState<IndexDataset>(initialEmptyDataset);
@@ -385,7 +386,13 @@ export function App() {
 
   // If not authenticated, render Login Page
   if (!currentUser || !authToken) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        isDarkMode={isDarkMode}
+        onToggleTheme={handleToggleTheme}
+      />
+    );
   }
 
   const effectiveStartTime = filters.startTime || dataset.summary.startTime || '09:15 AM';
