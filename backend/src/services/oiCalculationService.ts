@@ -169,6 +169,62 @@ export function extractATMPlus4OTM(
 }
 
 /**
+ * Utility to convert raw contract quantity to Lakhs (1 Lakh = 100,000 contracts).
+ * - If value is >= 1000 or <= -1000, divides by 100,000 and rounds to 2 decimal places.
+ * - Otherwise (if already in Lakhs or 0), rounds to 2 decimal places.
+ */
+export function convertToLakhs(val: number | null | undefined): number | null {
+  if (val === null || val === undefined || isNaN(val)) return null;
+  if (val === 0) return 0;
+  const inLakhs = Math.abs(val) >= 1000 ? val / 100000 : val;
+  const sign = inLakhs < 0 ? -1 : 1;
+  const absVal = Math.abs(inLakhs);
+  return sign * (Math.round((absVal + 1e-9) * 100) / 100);
+}
+
+/**
+ * Safely parses any timestamp representation into time-of-day milliseconds (0 to 86,399,999 ms).
+ * Guarantees consistent comparisons regardless of whether input is HH:MM, HH:MM AM/PM, HH:MM:SS, or ISO string.
+ */
+export function getTimeOfDayMs(ts: string | Date): number {
+  if (ts === null || ts === undefined) {
+    throw new Error('Invalid timestamp format');
+  }
+  if (ts instanceof Date) {
+    if (isNaN(ts.getTime())) throw new Error('Invalid timestamp format');
+    return ts.getHours() * 3600000 + ts.getMinutes() * 60000 + ts.getSeconds() * 1000 + ts.getMilliseconds();
+  }
+  if (typeof ts === 'string') {
+    const trimmed = ts.trim();
+    if (trimmed === '') {
+      throw new Error('Invalid timestamp format');
+    }
+
+    const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$/i);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1], 10);
+      const minutes = parseInt(timeMatch[2], 10);
+      const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+      const ampm = timeMatch[4];
+      if (hours < 0 || hours > 24 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+        throw new Error('Invalid timestamp format');
+      }
+      if (ampm) {
+        if (ampm.toUpperCase() === 'PM' && hours < 12) hours += 12;
+        if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+      }
+      return hours * 3600000 + minutes * 60000 + seconds * 1000;
+    }
+
+    const parsedDate = new Date(trimmed);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate.getHours() * 3600000 + parsedDate.getMinutes() * 60000 + parsedDate.getSeconds() * 1000 + parsedDate.getMilliseconds();
+    }
+  }
+  throw new Error('Invalid timestamp format');
+}
+
+/**
  * Safely parses a timestamp input (ISO string, HH:MM AM/PM format, or Date object) into Unix epoch ms.
  * Throws Error('Invalid timestamp format') if parsing fails.
  */
@@ -186,8 +242,6 @@ export function parseTimestamp(ts: string | Date): number {
     if (trimmed === '') {
       throw new Error('Invalid timestamp format');
     }
-    const parsed = Date.parse(trimmed);
-    if (!isNaN(parsed)) return parsed;
 
     // Handle "HH:MM", "HH:MM:SS", "HH:MM AM/PM", "HH:MM:SS AM/PM" format
     const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?$/i);
@@ -206,6 +260,9 @@ export function parseTimestamp(ts: string | Date): number {
       const d = new Date(1970, 0, 1, hours, minutes, seconds);
       return d.getTime();
     }
+
+    const parsed = Date.parse(trimmed);
+    if (!isNaN(parsed)) return parsed;
   }
   throw new Error('Invalid timestamp format');
 }
@@ -433,6 +490,8 @@ export class OICalculationService {
   public getStrikeSpacing = getStrikeSpacing;
   public calculateDynamicATM = calculateDynamicATM;
   public extractATMPlus4OTM = extractATMPlus4OTM;
+  public convertToLakhs = convertToLakhs;
+  public getTimeOfDayMs = getTimeOfDayMs;
   public calculatePercentage = (change: number, base: number): number => {
     return calculatePercentageChange(base + change, base);
   };
@@ -445,6 +504,7 @@ export class OICalculationService {
   /**
    * Build complete time-series dataset with summary metrics from snapshot records.
    * Primary OI Change is calculated against Previous Day Closing Baseline.
+   * All OI values and deltas are converted into Lakhs (1 Lakh = 100,000 contracts).
    */
   public calculateTimeSeriesDataset(
     indexSymbol: SupportedIndex,
@@ -458,8 +518,8 @@ export class OICalculationService {
     frequency: '1m' | '3m' | '5m' = '3m'
   ): IndexDataset {
     const effectiveStartTime = requestedStartTime || '09:15 AM';
-    const startMs = parseTimestamp(effectiveStartTime);
-    const endMs = requestedEndTime ? parseTimestamp(requestedEndTime) : Infinity;
+    const startMs = getTimeOfDayMs(effectiveStartTime);
+    const endMs = requestedEndTime ? getTimeOfDayMs(requestedEndTime) : Infinity;
 
     if (startMs > endMs) {
       throw new Error('Start time cannot be later than end time');
@@ -477,6 +537,7 @@ export class OICalculationService {
         availableDates: availableDates.length > 0 ? availableDates : [dateStr],
         selectedDate: dateStr,
         timeOptions,
+        unit: 'Lakhs',
         summary: {
           startTime: effectiveStartTime,
           endTime: requestedEndTime || '03:40 PM',
@@ -487,15 +548,27 @@ export class OICalculationService {
           callOIChangeVal: 0,
           callOIChangePct: 0,
           putOIChangeVal: 0,
-          putOIChangePct: 0
+          putOIChangePct: 0,
+          unit: 'Lakhs'
         },
         rows: [],
-        strikeDetails: latestStrikeDetails || []
+        strikeDetails: (latestStrikeDetails || []).map((s) => ({
+          ...s,
+          ceOI: convertToLakhs(s.ceOI) ?? 0,
+          peOI: convertToLakhs(s.peOI) ?? 0,
+          cePreviousOI: s.cePreviousOI !== undefined ? convertToLakhs(s.cePreviousOI) ?? undefined : undefined,
+          pePreviousOI: s.pePreviousOI !== undefined ? convertToLakhs(s.pePreviousOI) ?? undefined : undefined,
+          ceOIChange: s.ceOIChange !== undefined ? convertToLakhs(s.ceOIChange) ?? undefined : undefined,
+          peOIChange: s.peOIChange !== undefined ? convertToLakhs(s.peOIChange) ?? undefined : undefined,
+          ceVolume: s.ceVolume !== undefined ? convertToLakhs(s.ceVolume) ?? undefined : undefined,
+          peVolume: s.peVolume !== undefined ? convertToLakhs(s.peVolume) ?? undefined : undefined,
+          unit: 'Lakhs'
+        }))
       };
     }
 
     let filtered = snapshots.filter((s) => {
-      const snapMs = parseTimestamp(s.timeStr);
+      const snapMs = getTimeOfDayMs(s.timeStr);
       return snapMs >= startMs && snapMs <= endMs;
     });
 
@@ -505,6 +578,7 @@ export class OICalculationService {
 
     if (filtered.length === 0) {
       const lastSnap = snapshots && snapshots.length > 0 ? snapshots[snapshots.length - 1] : undefined;
+      const rawStrikeDetails = latestStrikeDetails || lastSnap?.strikeDetails || [];
       return {
         index: indexSymbol,
         currentExpiry: latestExpiry || lastSnap?.expiry,
@@ -514,6 +588,7 @@ export class OICalculationService {
         availableDates: availableDates.length > 0 ? availableDates : [dateStr],
         selectedDate: dateStr,
         timeOptions,
+        unit: 'Lakhs',
         summary: {
           startTime: effectiveStartTime,
           endTime: requestedEndTime || (lastSnap ? lastSnap.timeStr : '03:40 PM'),
@@ -528,10 +603,22 @@ export class OICalculationService {
           callOIChangeVal: 0,
           callOIChangePct: 0,
           putOIChangeVal: 0,
-          putOIChangePct: 0
+          putOIChangePct: 0,
+          unit: 'Lakhs'
         },
         rows: [],
-        strikeDetails: latestStrikeDetails || lastSnap?.strikeDetails || []
+        strikeDetails: rawStrikeDetails.map((s) => ({
+          ...s,
+          ceOI: convertToLakhs(s.ceOI) ?? 0,
+          peOI: convertToLakhs(s.peOI) ?? 0,
+          cePreviousOI: s.cePreviousOI !== undefined ? convertToLakhs(s.cePreviousOI) ?? undefined : undefined,
+          pePreviousOI: s.pePreviousOI !== undefined ? convertToLakhs(s.pePreviousOI) ?? undefined : undefined,
+          ceOIChange: s.ceOIChange !== undefined ? convertToLakhs(s.ceOIChange) ?? undefined : undefined,
+          peOIChange: s.peOIChange !== undefined ? convertToLakhs(s.peOIChange) ?? undefined : undefined,
+          ceVolume: s.ceVolume !== undefined ? convertToLakhs(s.ceVolume) ?? undefined : undefined,
+          peVolume: s.peVolume !== undefined ? convertToLakhs(s.peVolume) ?? undefined : undefined,
+          unit: 'Lakhs'
+        }))
       };
     }
 
@@ -542,7 +629,7 @@ export class OICalculationService {
       let lastIncludedMs = -Infinity;
       for (let i = 0; i < filtered.length; i++) {
         const s = filtered[i];
-        const snapMs = parseTimestamp(s.timeStr);
+        const snapMs = getTimeOfDayMs(s.timeStr);
         if (i === 0 || i === filtered.length - 1 || snapMs - lastIncludedMs >= stepMs - 15000) {
           sampled.push(s);
           lastIncludedMs = snapMs;
@@ -562,48 +649,54 @@ export class OICalculationService {
             : 0);
 
       // Open Interest Change (OI Change vs Previous Trading Day Close Baseline)
-      // Call OI Change(t) = TotalCallOI(t) - Previous Trading Day Closing Call OI
-      // Put OI Change(t) = TotalPutOI(t) - Previous Trading Day Closing Put OI
       const fallbackCallBase = snapshots.length > 0 ? snapshots[0].totalCallOI : startSnap.totalCallOI;
       const fallbackPutBase = snapshots.length > 0 ? snapshots[0].totalPutOI : startSnap.totalPutOI;
       const prevCallClose = snapshot.previousCallOI !== undefined ? snapshot.previousCallOI : fallbackCallBase;
       const prevPutClose = snapshot.previousPutOI !== undefined ? snapshot.previousPutOI : fallbackPutBase;
 
-      const callOIChange = snapshot.callOIChangeVal !== undefined
+      const callOIChangeRaw = snapshot.callOIChangeVal !== undefined
         ? snapshot.callOIChangeVal
         : this.round(snapshot.totalCallOI - prevCallClose);
 
-      const putOIChange = snapshot.putOIChangeVal !== undefined
+      const putOIChangeRaw = snapshot.putOIChangeVal !== undefined
         ? snapshot.putOIChangeVal
         : this.round(snapshot.totalPutOI - prevPutClose);
 
-      // Interval Difference(t) = Current Interval Snapshot OI - Previous Interval Snapshot OI
-      // First snapshot of interval sequence has Difference = null
-      let callDifference: number | null = null;
-      let putDifference: number | null = null;
+      let callDifferenceRaw: number | null = null;
+      let putDifferenceRaw: number | null = null;
 
       if (idx > 0) {
         const prevSnap = filtered[idx - 1];
-        callDifference = this.round(snapshot.totalCallOI - prevSnap.totalCallOI);
-        putDifference = this.round(snapshot.totalPutOI - prevSnap.totalPutOI);
+        callDifferenceRaw = this.round(snapshot.totalCallOI - prevSnap.totalCallOI);
+        putDifferenceRaw = this.round(snapshot.totalPutOI - prevSnap.totalPutOI);
       }
 
-      const fullDayCallChangeVal = callOIChange;
+      const fullDayCallChangeValRaw = callOIChangeRaw;
       const fullDayCallChangePct = snapshot.callOIChangePct !== undefined
         ? snapshot.callOIChangePct
         : calculatePercentageChange(snapshot.totalCallOI, prevCallClose);
 
-      const fullDayPutChangeVal = putOIChange;
+      const fullDayPutChangeValRaw = putOIChangeRaw;
       const fullDayPutChangePct = snapshot.putOIChangePct !== undefined
         ? snapshot.putOIChangePct
         : calculatePercentageChange(snapshot.totalPutOI, prevPutClose);
+
+      // Convert all metrics to Lakhs
+      const callOI = convertToLakhs(snapshot.totalCallOI) ?? 0;
+      const putOI = convertToLakhs(snapshot.totalPutOI) ?? 0;
+      const callOIChange = convertToLakhs(callOIChangeRaw) ?? 0;
+      const putOIChange = convertToLakhs(putOIChangeRaw) ?? 0;
+      const callDifference = convertToLakhs(callDifferenceRaw);
+      const putDifference = convertToLakhs(putDifferenceRaw);
+      const fullDayCallChangeVal = convertToLakhs(fullDayCallChangeValRaw) ?? 0;
+      const fullDayPutChangeVal = convertToLakhs(fullDayPutChangeValRaw) ?? 0;
 
       return {
         time: snapshot.timeStr,
         spotPrice: snapshot.spotPrice,
         atmStrike: snapshot.atmStrike,
-        callOI: this.round(snapshot.totalCallOI),
-        putOI: this.round(snapshot.totalPutOI),
+        callOI,
+        putOI,
         pcr,
         callOIChange,
         putOIChange,
@@ -619,14 +712,15 @@ export class OICalculationService {
         callChangeVal: callOIChange,
         callChangePct: fullDayCallChangePct,
         putChangeVal: putOIChange,
-        putChangePct: fullDayPutChangePct
+        putChangePct: fullDayPutChangePct,
+        unit: 'Lakhs'
       };
     });
 
     const endPrevCallClose = endSnap.previousCallOI !== undefined ? endSnap.previousCallOI : startSnap.totalCallOI;
     const endPrevPutClose = endSnap.previousPutOI !== undefined ? endSnap.previousPutOI : startSnap.totalPutOI;
 
-    const callOIChangeVal = endSnap.callOIChangeVal !== undefined
+    const callOIChangeValRaw = endSnap.callOIChangeVal !== undefined
       ? endSnap.callOIChangeVal
       : this.round(endSnap.totalCallOI - endPrevCallClose);
 
@@ -634,7 +728,7 @@ export class OICalculationService {
       ? endSnap.callOIChangePct
       : calculatePercentageChange(endSnap.totalCallOI, endPrevCallClose);
 
-    const putOIChangeVal = endSnap.putOIChangeVal !== undefined
+    const putOIChangeValRaw = endSnap.putOIChangeVal !== undefined
       ? endSnap.putOIChangeVal
       : this.round(endSnap.totalPutOI - endPrevPutClose);
 
@@ -650,22 +744,22 @@ export class OICalculationService {
 
     // Identify interim snapshot if > 2 rows exist
     let interimTime: string | undefined;
-    let interimCallOIChangeVal: number | undefined;
+    let interimCallOIChangeValRaw: number | undefined;
     let interimCallOIChangePct: number | undefined;
-    let interimPutOIChangeVal: number | undefined;
+    let interimPutOIChangeValRaw: number | undefined;
     let interimPutOIChangePct: number | undefined;
 
     if (filtered.length > 2) {
       const interimSnap = filtered[filtered.length - 2];
       rows[filtered.length - 2].isHighlighted = true;
       interimTime = interimSnap.timeStr;
-      interimCallOIChangeVal = interimSnap.callOIChangeVal !== undefined
+      interimCallOIChangeValRaw = interimSnap.callOIChangeVal !== undefined
         ? interimSnap.callOIChangeVal
         : this.round(interimSnap.totalCallOI - startSnap.totalCallOI);
       interimCallOIChangePct = interimSnap.callOIChangePct !== undefined
         ? interimSnap.callOIChangePct
         : calculatePercentageChange(interimSnap.totalCallOI, startSnap.totalCallOI);
-      interimPutOIChangeVal = interimSnap.putOIChangeVal !== undefined
+      interimPutOIChangeValRaw = interimSnap.putOIChangeVal !== undefined
         ? interimSnap.putOIChangeVal
         : this.round(interimSnap.totalPutOI - startSnap.totalPutOI);
       interimPutOIChangePct = interimSnap.putOIChangePct !== undefined
@@ -680,22 +774,37 @@ export class OICalculationService {
       spotPrice: endSnap.spotPrice,
       atmStrike: endSnap.atmStrike,
       pcr: summaryPCR,
-      prevDayCloseCallOI: endSnap.previousCallOI,
-      prevDayClosePutOI: endSnap.previousPutOI,
-      startCallOI: this.round(startSnap.totalCallOI),
-      startPutOI: this.round(startSnap.totalPutOI),
-      endCallOI: this.round(endSnap.totalCallOI),
-      endPutOI: this.round(endSnap.totalPutOI),
-      callOIChangeVal,
+      prevDayCloseCallOI: convertToLakhs(endSnap.previousCallOI) ?? undefined,
+      prevDayClosePutOI: convertToLakhs(endSnap.previousPutOI) ?? undefined,
+      startCallOI: convertToLakhs(startSnap.totalCallOI) ?? 0,
+      startPutOI: convertToLakhs(startSnap.totalPutOI) ?? 0,
+      endCallOI: convertToLakhs(endSnap.totalCallOI) ?? 0,
+      endPutOI: convertToLakhs(endSnap.totalPutOI) ?? 0,
+      callOIChangeVal: convertToLakhs(callOIChangeValRaw) ?? 0,
       callOIChangePct,
-      putOIChangeVal,
+      putOIChangeVal: convertToLakhs(putOIChangeValRaw) ?? 0,
       putOIChangePct,
       interimTime,
-      interimCallOIChangeVal,
+      interimCallOIChangeVal: convertToLakhs(interimCallOIChangeValRaw) ?? undefined,
       interimCallOIChangePct,
-      interimPutOIChangeVal,
-      interimPutOIChangePct
+      interimPutOIChangeVal: convertToLakhs(interimPutOIChangeValRaw) ?? undefined,
+      interimPutOIChangePct,
+      unit: 'Lakhs'
     };
+
+    const rawStrikeDetails = endSnap.strikeDetails || latestStrikeDetails || [];
+    const strikeDetails: StrikeDetail[] = rawStrikeDetails.map((s) => ({
+      ...s,
+      ceOI: convertToLakhs(s.ceOI) ?? 0,
+      peOI: convertToLakhs(s.peOI) ?? 0,
+      cePreviousOI: s.cePreviousOI !== undefined ? convertToLakhs(s.cePreviousOI) ?? undefined : undefined,
+      pePreviousOI: s.pePreviousOI !== undefined ? convertToLakhs(s.pePreviousOI) ?? undefined : undefined,
+      ceOIChange: s.ceOIChange !== undefined ? convertToLakhs(s.ceOIChange) ?? undefined : undefined,
+      peOIChange: s.peOIChange !== undefined ? convertToLakhs(s.peOIChange) ?? undefined : undefined,
+      ceVolume: s.ceVolume !== undefined ? convertToLakhs(s.ceVolume) ?? undefined : undefined,
+      peVolume: s.peVolume !== undefined ? convertToLakhs(s.peVolume) ?? undefined : undefined,
+      unit: 'Lakhs'
+    }));
 
     return {
       index: indexSymbol,
@@ -708,7 +817,8 @@ export class OICalculationService {
       timeOptions,
       summary,
       rows,
-      strikeDetails: endSnap.strikeDetails || latestStrikeDetails || []
+      strikeDetails,
+      unit: 'Lakhs'
     };
   }
 }

@@ -168,6 +168,7 @@ export interface StrikeDetail {
   peLTP?: number;
   ceVolume?: number;
   peVolume?: number;
+  unit?: string;
 }
 
 export interface ATMPlus4OTMResult {
@@ -187,6 +188,7 @@ export interface ATMPlus4OTMResult {
   putOIChangeVal: number;
   putOIChangePct: number;
   pcr: number;
+  unit?: string;
 }
 
 export interface OIRow {
@@ -213,6 +215,7 @@ export interface OIRow {
   putChangeVal?: number;
   putChangePct?: number;
   isHighlighted?: boolean;
+  unit?: string;
 }
 
 export interface SummaryMetrics {
@@ -237,6 +240,7 @@ export interface SummaryMetrics {
   interimCallOIChangePct?: number;
   interimPutOIChangeVal?: number;
   interimPutOIChangePct?: number;
+  unit?: string;
 }
 
 export interface IndexDataset {
@@ -251,6 +255,7 @@ export interface IndexDataset {
   summary: SummaryMetrics;
   rows: OIRow[];
   strikeDetails?: StrikeDetail[];
+  unit?: string;
 }
 
 export interface OptionChainApiResponse<T = unknown> {

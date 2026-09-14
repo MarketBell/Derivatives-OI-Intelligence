@@ -153,17 +153,17 @@ describe('Backend MVP Pipeline Tests', () => {
       expect(dataset.rows[0].callChangePct).toBe(0);
 
       // Interim row (09:30 AM)
-      expect(dataset.rows[1].callChangeVal).toBe(10000);
+      expect(dataset.rows[1].callChangeVal).toBe(0.1);
       expect(dataset.rows[1].callChangePct).toBe(10);
-      expect(dataset.rows[1].putChangeVal).toBe(-5000);
+      expect(dataset.rows[1].putChangeVal).toBe(-0.05);
       expect(dataset.rows[1].putChangePct).toBe(-5);
 
       // Summary metrics
-      expect(dataset.summary.startCallOI).toBe(100000);
-      expect(dataset.summary.endCallOI).toBe(120000);
-      expect(dataset.summary.callOIChangeVal).toBe(20000);
+      expect(dataset.summary.startCallOI).toBe(1);
+      expect(dataset.summary.endCallOI).toBe(1.2);
+      expect(dataset.summary.callOIChangeVal).toBe(0.2);
       expect(dataset.summary.callOIChangePct).toBe(20);
-      expect(dataset.summary.putOIChangeVal).toBe(-10000);
+      expect(dataset.summary.putOIChangeVal).toBe(-0.1);
       expect(dataset.summary.putOIChangePct).toBe(-10);
     });
   });
