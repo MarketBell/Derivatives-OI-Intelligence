@@ -74,9 +74,11 @@ export const OITable: React.FC<OITableProps> = ({ rows }) => {
             {rows.map((row, index) => {
               const prevRow = index > 0 ? rows[index - 1] : null;
               const callDiff =
-                prevRow !== null ? Math.round((row.callOI - prevRow.callOI) * 100) / 100 : null;
+                row.callDifference ??
+                (prevRow !== null ? Math.round((row.callOI - prevRow.callOI) * 100) / 100 : null);
               const putDiff =
-                prevRow !== null ? Math.round((row.putOI - prevRow.putOI) * 100) / 100 : null;
+                row.putDifference ??
+                (prevRow !== null ? Math.round((row.putOI - prevRow.putOI) * 100) / 100 : null);
               const pcrVal =
                 row.pcr ??
                 (row.callOI > 0 ? Math.round((row.putOI / row.callOI) * 10000) / 10000 : 0);

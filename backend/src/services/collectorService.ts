@@ -43,13 +43,20 @@ export function generateFallbackOptionChain(
   for (let i = -numStrikesBelow; i <= numStrikesAbove; i++) {
     const strikePrice = baseStrike + i * strikeSpacing;
     const dist = Math.abs(i);
-    const ceBase = Math.max(15000, 120000 - dist * 12000 + ((ist.minutes + i * 5) % 15) * 500);
-    const peBase = Math.max(15000, 120000 - dist * 11000 + ((ist.minutes - i * 5) % 15) * 500);
+    // Static base values per strike for previous-day closing baseline
+    const ceStaticBase = Math.max(15000, 120000 - dist * 12000);
+    const peStaticBase = Math.max(15000, 120000 - dist * 11000);
+
+    // Live fluctuating OI based on time of day
+    const ceBase = Math.max(15000, ceStaticBase + ((ist.minutes + i * 5) % 15) * 500);
+    const peBase = Math.max(15000, peStaticBase + ((ist.minutes - i * 5) % 15) * 500);
 
     const ceOI = Math.round(ceBase);
     const peOI = Math.round(peBase);
-    const cePrev = Math.round(ceOI * 0.95);
-    const pePrev = Math.round(peOI * 0.96);
+
+    // Static previous-day closing OI baseline (does not fluctuate with current time of day)
+    const cePrev = Math.round(ceStaticBase * 0.95);
+    const pePrev = Math.round(peStaticBase * 0.96);
 
     strikes.push({
       strikePrice,

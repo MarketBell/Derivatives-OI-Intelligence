@@ -15,8 +15,10 @@ const formatVal = (val: number): string => {
 };
 
 const formatSigned = (val: number | null): React.ReactNode => {
-  if (val === null) return '—';
-  if (val === 0) return '—';
+  if (val === null || val === undefined) return '—';
+  if (Math.abs(val) < 0.0001) {
+    return <span className="txt-neutral">0.00</span>;
+  }
   const isPos = val > 0;
   const isNeg = val < 0;
   return (
